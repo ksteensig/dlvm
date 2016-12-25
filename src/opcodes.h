@@ -18,13 +18,4 @@ typedef enum opcode_e {
     HALT = 0xFF,
 } opcode_t;
 
-static uint32_t parameter_table[] {
-    0,
-    0,
-    0,
-    1,
-    0,
-
-};
-
 #endif //LISP_LANG_OPCODES_H
