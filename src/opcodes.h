@@ -1,5 +1,4 @@
-#ifndef LISP_LANG_OPCODES_H
-#define LISP_LANG_OPCODES_H
+#pragma once
 
 typedef enum opcode_e {
     NOP = 0x00,
@@ -17,5 +16,3 @@ typedef enum opcode_e {
     ACCESSARRAY = 0x0C,
     HALT = 0xFF,
 } opcode_t;
-
-#endif //LISP_LANG_OPCODES_H

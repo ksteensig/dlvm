@@ -1,6 +1,21 @@
 #include "vm.h"
 
-int exec(vm_t *vm)
+uint32_t VM::Next()
+{
+    return Program[pc++];
+}
+
+uint32_t VM::Pop()
+{
+    return Stack[sp--];
+}
+
+void VM::Push(uint32_t v)
+{
+    Stack[++sp] = v;
+}
+
+void VM::Exec()
 {
     while (1)
     {

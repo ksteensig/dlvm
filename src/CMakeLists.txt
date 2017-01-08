@@ -1,0 +1,1 @@
+add_library(vm vm.cpp vm.h opcodes.h types.h)
