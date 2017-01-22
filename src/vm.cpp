@@ -2,51 +2,52 @@
 
 uint32_t VM::Next()
 {
-    return Program[pc++];
+    return Program[++pc];
 }
 
-uint32_t VM::Pop()
+intptr_t VM::Pop()
 {
     return Stack[sp--];
 }
 
-void VM::Push(uint32_t v)
+void VM::Push(intptr_t v)
 {
     Stack[++sp] = v;
 }
 
 void VM::Exec()
 {
+    intptr_t a, b, rval;
+    intptr_t addr, argc;
+    uint32_t opcode;
+
     while (1)
     {
-        uint32_t opcode = NCODE(vm);
-
-        int a, b, rval;
-        uint32_t addr, argc;
+        opcode = Next();
 
         switch(opcode)
         {
             case NOP:
                 break;
             case ADD:
-                a = POP(vm);
-                b = POP(vm);
-                PUSH(vm, a+b);
+                a = Pop();
+                b = Pop();
+                Push(a+b);
             case MUL:
-                a = POP(vm);
-                b = POP(vm);
-                PUSH(vm, a*b);
+                a = Pop();
+                b = Pop();
+                Push(a*b);
                 break;
             case POP:
-                vm->sp--;
+                Pop();
                 break;
             case PUSH:
-                a = NCODE(vm);
-                PUSH(vm, a);
+                a = Next();
+                Push(a);
                 break;
             case CALL:
-                addr = NCODE(vm);
-                argc = NCODE(vm);
+                addr = Next();
+                argc = Next();
                 PUSH(vm, argc);
                 PUSH(vm, vm->fp);
                 PUSH(vm, vm->pc);

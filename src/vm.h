@@ -15,21 +15,16 @@
 
 using namespace std;
 
-#define PUSH(vm, v) vm->stack[++vm->sp] = v
-#define POP(vm)     vm->stack[vm->sp--]
-#define NCODE(vm)   vm->program[vm->pc++] // get next opcode
-
 class VM {
 public:
     vector<uint32_t> Program;
-    vector<uint32_t> Stack;
-    vector<uint32_t> Heap;
+    vector<intptr_t> Stack;
     uint32_t pc = 0;
     uint32_t sp = 0;
     uint32_t fp = 0;
 
     void Exec();
-    void Push(uint32_t v);
-    uint32_t Pop();
+    void Push(intptr_t v);
+    intptr_t Pop();
     uint32_t Next();
 };
