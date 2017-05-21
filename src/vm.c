@@ -1,5 +1,15 @@
 #include "vm.h"
 
+dlvm_t *dlvm_init(program_t *p, stack_t *s, heap_t *h) {
+    dlvm_t *vm = malloc(sizeof(dlvm_t));
+
+    vm->program = p;
+    vm->stack = s;
+    vm->heap = h;
+
+    return vm;
+}
+
 uint32_t VM::Next()
 {
     return Program[++pc];
