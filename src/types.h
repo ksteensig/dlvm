@@ -1,17 +1,6 @@
-#pragma once
-
-#include <iostream>
-#include <ctime>
-#include <sstream>
-#include <fstream>
-#include <vector>
-#include <string>
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-using namespace std;
 
 typedef enum type_e {
     NIL         = 0,
@@ -34,7 +23,7 @@ typedef struct tnil_s {
 
 typedef struct tbool_s {
     type_t t;
-    bool v;
+    uint8_t v;
 } tbool_t;
 
 typedef struct tint_s {
@@ -49,18 +38,18 @@ typedef struct tfloat_s {
 
 typedef struct tstring_s {
     type_t t;
-    string &v;
+    char *v;
 } tstr_t;
 
 typedef struct tlist_s {
     type_t t;
-    vector<intptr_t&> &v;
+    intptr_t *v;
 } tlist_t;
 
 typedef struct tfun_s {
     type_t t;
     int fargs;
     intptr_t addr;
-    vector<intptr_t&> &env;
+    intptr_t *env;
 } tfun_t;
 

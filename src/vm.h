@@ -1,11 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <ctime>
-#include <sstream>
-#include <fstream>
-#include <vector>
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -13,8 +7,7 @@
 #include "opcodes.h"
 #include "types.h"
 
-using namespace std;
-
+/*
 class VM {
 public:
     vector<uint32_t> Program;
@@ -28,3 +21,4 @@ public:
     intptr_t Pop();
     uint32_t Next();
 };
+*/
