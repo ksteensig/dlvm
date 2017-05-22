@@ -10,6 +10,41 @@ dlvm_t *dlvm_init(program_t *p, stack_t *s, heap_t *h) {
     return vm;
 }
 
+program_t *program_init(char *filename) {
+    program_t *prog = malloc(sizeof(program_t));
+
+    return prog;
+}
+
+stack_t *stack_init(uint64_t stack_size) {
+    stack_t *stack = malloc(sizeof(stack_t));
+
+    stack->stack_size = stack_size;
+    stack->stack = malloc(sizeof(uint64_t) * stack_size);
+
+    return stack;
+}
+
+heap_t *heap_init(uint64_t heap_size) {
+    heap_t *heap = malloc(sizeof(heap_t));
+
+    heap->heap_size = heap_size;
+    heap->heap = malloc(sizeof(uint64_t) * heap_size);
+
+    heap->heap_objs_count = 0;
+
+    return heap;
+}
+
+uint64_t dlvm_next_op(dlvm_t *vm) {
+    return vm->program[++(vm->pc)];
+}
+
+uint64_t dlvm_next_op(dlvm_t *vm) {
+    return vm->program[++(vm->pc)];
+}
+
+/*
 uint32_t VM::Next()
 {
     return Program[++pc];
@@ -83,3 +118,4 @@ void VM::Exec()
         }
     }
 }
+*/

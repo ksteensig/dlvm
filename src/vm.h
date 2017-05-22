@@ -14,13 +14,15 @@ typedef struct {
 typedef struct {
     uint64_t heap_size;
     uint64_t *heap;
+
+    uint64_t heap_objs_count;
     heap_obj_t *heap_objs;
-} heap_t
+} heap_t;
 
 typedef struct {
     uint64_t stack_size;
     uint64_t *stack;
-} heap_t
+} stack_t;
 
 typedef struct {
     uint64_t program_size;
@@ -39,7 +41,19 @@ typedef struct {
 
 dlvm_t *dlvm_init(program_t *p, stack_t *s, heap_t *h);
 
+program_t *program_init(char *filename);
+
+stack_t *stack_init(uint64_t stack_size);
+
+heap_t *heap_init(uint64_t heap_size);
+
+heap_t *heap_obj_init(char *name, uint64_t start, uint64_t end);
+
 void dlvm_exec(dlvm_t *vm);
+
+uint64_t dlvm_next_op(dlvm_t *vm);
+
+
 
 /*
 class VM {
