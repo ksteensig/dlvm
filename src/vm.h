@@ -5,12 +5,15 @@
 #include "opcodes.h"
 #include "types.h"
 
+/*
 typedef struct {
     char *name;
     uint64_t start;
     uint64_t end;
 } heap_obj_t;
+*/
 
+/*
 typedef struct {
     uint64_t heap_size;
     uint64_t *heap;
@@ -18,10 +21,11 @@ typedef struct {
     uint64_t heap_objs_count;
     heap_obj_t *heap_objs;
 } heap_t;
+*/
 
 typedef struct {
     uint64_t stack_size;
-    uint64_t *stack;
+    ttype_t **stack;
 } stack_t;
 
 typedef struct {
@@ -32,41 +36,31 @@ typedef struct {
 typedef struct {
     program_t *program;
     stack_t *stack;
-    heap_t *heap;
+    //heap_t *heap;
 
-    uint64_t pc = 0;
-    uint64_t sp = 0;
-    uint64_t fp = 0;
+    uint64_t pc;
+    uint64_t sp;
+    uint64_t fp;
 } dlvm_t;
 
-dlvm_t *dlvm_init(program_t *p, stack_t *s, heap_t *h);
+dlvm_t *dlvm_init(program_t *p, stack_t *s);
 
 program_t *program_init(char *filename);
 
 stack_t *stack_init(uint64_t stack_size);
 
-heap_t *heap_init(uint64_t heap_size);
+//heap_t *heap_init(uint64_t heap_size);
 
-heap_t *heap_obj_init(char *name, uint64_t start, uint64_t end);
+//heap_t *heap_obj_init(char *name, uint64_t start, uint64_t end);
 
 void dlvm_exec(dlvm_t *vm);
 
 uint64_t dlvm_next_op(dlvm_t *vm);
 
+void dlvm_push(dlvm_t *vm, ttype_t *v);
 
+ttype_t *dlvm_pop(dlvm_t *vm);
 
-/*
-class VM {
-public:
-    vector<uint32_t> Program;
-    vector<intptr_t> Stack;
-    uint32_t pc = 0;
-    uint32_t sp = 0;
-    uint32_t fp = 0;
+void dlvm_gc_mark(dlvm_t *vm);
 
-    void Exec();
-    void Push(intptr_t v);
-    intptr_t Pop();
-    uint32_t Next();
-};
-*/
+void dlvm_gc_sweep(dlvm_t *vm);

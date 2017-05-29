@@ -15,8 +15,19 @@ typedef enum type_e {
 /* type to convert to */
 typedef struct ttype_s {
     type_t t;
+    struct ttype_s *next;
+    char marked;
 } ttype_t;
 
+typedef struct tint_s {
+    type_t t;
+    ttype_t *next;
+    char marked;
+
+    int64_t v;
+} tint_t;
+
+/*
 typedef struct tnil_s {
     type_t t;
 } tnil_t;
@@ -25,11 +36,6 @@ typedef struct tbool_s {
     type_t t;
     uint8_t v;
 } tbool_t;
-
-typedef struct tint_s {
-    type_t t;
-    int32_t v;
-} tint_t;
 
 typedef struct tfloat_s {
     type_t t;
@@ -52,4 +58,4 @@ typedef struct tfun_s {
     intptr_t addr;
     intptr_t *env;
 } tfun_t;
-
+*/
