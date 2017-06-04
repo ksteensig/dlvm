@@ -27,6 +27,10 @@ typedef struct tint_s {
     int64_t v;
 } tint_t;
 
+ttype_t *init_int(int64_t v);
+void free_int(ttype_t *r1);
+ttype_t *add_int(ttype_t *r1, ttype_t *r2);
+
 /*
 typedef struct tnil_s {
     type_t t;

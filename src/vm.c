@@ -46,12 +46,19 @@ uint64_t dlvm_next_op(dlvm_t *vm) {
 }
 
 void dlvm_push(dlvm_t *vm, ttype_t *v) {
+    static ttype_t *last_pushed;
+
+    if (last_pushed != NULL) {
+         v->next = last_pushed;
+    }
+    
+    last_pushed = v;
+
     vm->stack->stack[vm->sp++] = v;
 }
 
 ttype_t *dlvm_pop(dlvm_t *vm) {
     ttype_t *ret = vm->stack->stack[--(vm->sp)];
-    //printf("addr: %u\n", vm->stack->stack[vm->sp]);
     vm->stack->stack[vm->sp + 1] = NULL;
 
     return ret;
@@ -74,7 +81,18 @@ void dlvm_gc_sweep(dlvm_t *vm) {
     while (current != NULL) {
         if (current->marked == 0) {
             next = current->next;
-            free(current);
+            
+            switch (current->t) {
+                case INT:
+                    free_int(current);
+                    break;
+                default:
+                    free(current);
+            }
+
+            current = next;
+        } else {
+            next = current->next;
             current = next;
         }
     }
@@ -83,8 +101,8 @@ void dlvm_gc_sweep(dlvm_t *vm) {
 void dlvm_gc_reset_marked(dlvm_t *vm) {
     for (uint64_t i = 0; i < vm->stack->stack_size; i++) {
         if (vm->stack->stack[i] != NULL) {
-            ((ttype_t *)vm->stack->stack[i])->marked = 0;
-            ((ttype_t *)vm->stack->stack[i])->next = vm->stack->stack[i + 1];
+            vm->stack->stack[i]->marked = 0;
+            vm->stack->stack[i]->next = vm->stack->stack[i + 1];
         } else {
             break;
         }
@@ -100,7 +118,6 @@ void dlvm_gc_mark_and_sweep(dlvm_t *vm) {
 void dlvm_exec(dlvm_t *vm) {
     opcode_t opcode;
     ttype_t *r1, *r2, *res;
-    ttype_t *last_pushed;
 
     uint8_t gc = 1;
 
@@ -110,29 +127,18 @@ void dlvm_exec(dlvm_t *vm) {
             case ADD:
                 r1 = dlvm_pop(vm);
                 r2 = dlvm_pop(vm);
-                res = malloc(sizeof(tint_t));
-                ((tint_t *)res)->v = ((tint_t *)r1)->v + ((tint_t *)r2)->v;
-                ((tint_t *)res)->t = INT;
-                dlvm_push(vm, res);                
+                res = add_int(r1, r2);
+                dlvm_push(vm, res);
                 break;
             case PUSH:
-                r1 = malloc(sizeof(tint_t));
-                ((tint_t *)r1)->v = dlvm_next_op(vm);
-                ((tint_t *)r1)->t = INT;
+                r1 = init_int(dlvm_next_op(vm));
                 dlvm_push(vm, r1);
-
-                if (last_pushed != NULL) {
-                    last_pushed->next = r1;
-                }
-
-                last_pushed = r1;
-
                 break;
             case POP:
                 dlvm_pop(vm);
                 break;
             case HALT:
-                //dlvm_gc_mark_and_sweep(vm);
+                dlvm_gc_mark_and_sweep(vm);
                 return;
             default:
                 return;
