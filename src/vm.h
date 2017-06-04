@@ -55,12 +55,10 @@ stack_t *stack_init(uint64_t stack_size);
 
 void dlvm_exec(dlvm_t *vm);
 
-uint64_t dlvm_next_op(dlvm_t *vm);
-
-void dlvm_push(dlvm_t *vm, ttype_t *v);
-
-ttype_t *dlvm_pop(dlvm_t *vm);
-
 void dlvm_gc_mark(dlvm_t *vm);
 
 void dlvm_gc_sweep(dlvm_t *vm);
+
+void dlvm_gc_reset_marked(dlvm_t *vm);
+
+void dlvm_gc_mark_and_sweep(dlvm_t *vm);
