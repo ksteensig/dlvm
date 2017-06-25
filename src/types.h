@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef enum type_e {
     NIL         = 0,
     BOOL        = 1,
     INT         = 2,
     FLOAT       = 3,
-    STRING      = 4,
+    CHAR        = 4,
     LIST        = 5,
     FUNCTION    = 6
 } type_t;
@@ -19,6 +20,14 @@ typedef struct ttype_s {
     char marked;
 } ttype_t;
 
+typedef struct tbool_s {
+    type_t t;
+    ttype_t *next;
+    char marked;
+
+    bool v;
+} tbool_t;
+
 typedef struct tint_s {
     type_t t;
     ttype_t *next;
@@ -26,6 +35,31 @@ typedef struct tint_s {
 
     int64_t v;
 } tint_t;
+
+typedef struct tfloat_s {
+    type_t t;
+    ttype_t *next;
+    char marked;
+
+    double v;
+} tfloat_t;
+
+typedef struct tchar_s {
+    type_t t;
+    ttype_t *next;
+    char marked;
+
+    char v;
+} tchar_t;
+
+typedef struct tlist_s {
+    type_t t;
+    ttype_t *next;
+    char marked;
+
+    ttype_t list;
+    uint64_t len;
+} tlist_t;
 
 ttype_t *init_int(int64_t v);
 void free_int(ttype_t *r1);

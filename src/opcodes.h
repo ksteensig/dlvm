@@ -24,5 +24,8 @@ typedef enum opcode_e {
     PUSH = 0x03,
     POP = 0x04,
     PRINT = 0x05,
+    CREATE_LIST = 0x06,
+    INSERT_LIST = 0x07,
+    ACCESS_LIST = 0x08,
     HALT = 0xFF,
 } opcode_t;
