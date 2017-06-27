@@ -127,7 +127,31 @@ void dlvm_exec(dlvm_t *vm) {
             case ADD:
                 r1 = dlvm_pop(vm);
                 r2 = dlvm_pop(vm);
-                res = add_int(r1, r2);
+                res = add(r1, r2);
+                dlvm_push(vm, res);
+                break;
+            case MUL:
+                r1 = dlvm_pop(vm);
+                r2 = dlvm_pop(vm);
+                res = multiply(r1, r2);
+                dlvm_push(vm, res);
+                break;
+            case SUB:
+                r1 = dlvm_pop(vm);
+                r2 = dlvm_pop(vm);
+                res = subtract(r1, r2);
+                dlvm_push(vm, res);
+                break;
+            case DIV:
+                r1 = dlvm_pop(vm);
+                r2 = dlvm_pop(vm);
+                res = divide(r1, r2);
+                dlvm_push(vm, res);
+                break;
+            case MOD:
+                r1 = dlvm_pop(vm);
+                r2 = dlvm_pop(vm);
+                res = modulo(r1, r2);
                 dlvm_push(vm, res);
                 break;
             case PUSH:
@@ -137,6 +161,9 @@ void dlvm_exec(dlvm_t *vm) {
             case POP:
                 dlvm_pop(vm);
                 break;
+            case PRINT:
+                r1 = dlvm_pop(vm);
+                printf("%ld\n", ((tint_t *)r1)->v);
             case HALT:
                 dlvm_gc_mark_and_sweep(vm);
                 return;
