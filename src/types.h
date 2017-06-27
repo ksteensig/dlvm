@@ -18,13 +18,13 @@ typedef enum type_e {
 typedef struct ttype_s {
     type_t t;
     struct ttype_s *next;
-    char marked;
+    bool marked;
 } ttype_t;
 
 typedef struct tbool_s {
     type_t t;
     ttype_t *next;
-    char marked;
+    bool marked;
 
     bool v;
 } tbool_t;
@@ -32,7 +32,7 @@ typedef struct tbool_s {
 typedef struct tint_s {
     type_t t;
     ttype_t *next;
-    char marked;
+    bool marked;
 
     int64_t v;
 } tint_t;
@@ -40,7 +40,7 @@ typedef struct tint_s {
 typedef struct tfloat_s {
     type_t t;
     ttype_t *next;
-    char marked;
+    bool marked;
 
     double v;
 } tfloat_t;
@@ -48,7 +48,7 @@ typedef struct tfloat_s {
 typedef struct tchar_s {
     type_t t;
     ttype_t *next;
-    char marked;
+    bool marked;
 
     char v;
 } tchar_t;
@@ -56,40 +56,33 @@ typedef struct tchar_s {
 typedef struct tlist_s {
     type_t t;
     ttype_t *next;
-    char marked;
+    bool marked;
 
     ttype_t *list;
     uint64_t arr_len;
-    uint64_t last_elem;
+    uint64_t elements;
 } tlist_t;
 
 typedef struct tfun_s {
     type_t t;
     struct ttype_s *next;
-    char marked;
+    bool marked;
 
-    int argc;
-    intptr_t addr;
-    intptr_t *env;
+    uint8_t argc;
+    uint64_t addr;
+    uint64_t *env;
 } tfun_t;
 
 typedef struct terror_s {
     type_t t;
     ttype_t *next;
-    char marked;
+    bool marked;
 
     char *msg;
 } terror_t;
 
-ttype_t *add(ttype_t *r1, ttype_t *r2);
-ttype_t *subtract(ttype_t *r1, ttype_t *r2);
-ttype_t *multiply(ttype_t *r1, ttype_t *r2);
-ttype_t *divide(ttype_t *r1, ttype_t *r2);
-ttype_t *modulo(ttype_t *r1, ttype_t *r2);
-
-bool is_number(ttype_t *r);
-bool is_float(ttype_t *r);
-bool is_int(ttype_t *r);
+ttype_t *init_bool(bool v);
+void free_bool(ttype_t *r1);
 
 ttype_t *init_int(int64_t v);
 void free_int(ttype_t *r1);
@@ -97,4 +90,23 @@ void free_int(ttype_t *r1);
 ttype_t *init_float(double v);
 void free_float(ttype_t *r1);
 
+ttype_t *init_char(char v);
+void free_char(ttype_t *r1);
+
+ttype_t *init_list();
+void free_list(ttype_t *list);
+
 ttype_t *init_error(char *msg);
+void free_error(ttype_t *err);
+
+bool is_number(ttype_t *r);
+bool is_float(ttype_t *r);
+bool is_int(ttype_t *r);
+
+ttype_t *add(ttype_t *r1, ttype_t *r2);
+ttype_t *subtract(ttype_t *r1, ttype_t *r2);
+ttype_t *multiply(ttype_t *r1, ttype_t *r2);
+ttype_t *divide(ttype_t *r1, ttype_t *r2);
+ttype_t *modulo(ttype_t *r1, ttype_t *r2);
+
+ttype_t *insert_list(ttype_t *list, ttype_t *obj);

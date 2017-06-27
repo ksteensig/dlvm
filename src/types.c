@@ -1,10 +1,23 @@
 #include "types.h"
 
+ttype_t *init_bool(bool v) {
+    tbool_t *res = malloc(sizeof(tbool_t));
+    res->v = v;
+    res->t = BOOL;
+    res->marked = false;
+
+    return (ttype_t *)res;
+}
+
+void free_bool(ttype_t *r1) {
+    free((tbool_t *)r1);
+}
+
 ttype_t *init_int(int64_t v) {
     tint_t *res = malloc(sizeof(tint_t));
     res->v = v;
     res->t = INT;
-    res->marked = 0;
+    res->marked = false;
 
     return (ttype_t *)res;
 }
@@ -17,13 +30,57 @@ ttype_t *init_float(double v) {
     tfloat_t *res = malloc(sizeof(tfloat_t));
     res->v = v;
     res->t = FLOAT;
-    res->marked = 0;
+    res->marked = false;
 
     return (ttype_t *)res;
 }
 
 void free_float(ttype_t *r1) {
     free((tfloat_t *)r1);
+}
+
+ttype_t *init_char(char v) {
+    tchar_t *res = malloc(sizeof(tchar_t));
+    res->v = v;
+    res->t = CHAR;
+    res->marked = false;
+
+    return (ttype_t *)res;
+}
+
+void free_char(ttype_t *r1) {
+    free((tchar_t *)r1);
+}
+
+ttype_t *init_list() {
+    tlist_t *res = malloc(sizeof(tlist_t));
+    res->t = LIST;
+    res->marked = false;
+
+    res->list = malloc(sizeof(ttype_t *) * 2);
+    res->arr_len = 2;
+    res->elements = 0;
+
+    return (ttype_t *)res;
+}
+
+void free_list(ttype_t *list) {
+    free(((tlist_t *)list)->list);
+    free((tlist_t *)list);
+}
+
+ttype_t *init_error(char *msg) {
+    terror_t *err = malloc(sizeof(terror_t));
+    err->t = ERROR;
+    err->marked = false;
+    err->msg = msg;
+
+    return (ttype_t *)err;
+}
+
+void free_error(ttype_t *err) {
+    free(((terror_t *)err)->msg);
+    free((terror_t *)err);
 }
 
 bool is_float(ttype_t *r) {
@@ -110,13 +167,4 @@ ttype_t *modulo(ttype_t *r1, ttype_t *r2) {
     }
 
     return init_error("something happened while dividing\n");
-}
-
-ttype_t *init_error(char *msg) {
-    terror_t *err = malloc(sizeof(terror_t));
-    err->t = ERROR;
-    err->marked = 0;
-    err->msg = msg;
-
-    return (ttype_t *)err;
 }
