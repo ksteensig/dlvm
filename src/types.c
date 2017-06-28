@@ -214,7 +214,7 @@ ttype_t *overwrite_list(ttype_t *list, ttype_t *obj, uint64_t pos) {
     if (pos > l->elements + 1) {
         return init_error("out of bounds error while overwriting position in list\n");
     }
-
+    
     l->list[pos] = obj;
 
     return (ttype_t *)l;

@@ -119,7 +119,7 @@ void dlvm_exec(dlvm_t *vm) {
     opcode_t opcode;
     ttype_t *r1, *r2, *res;
 
-    uint8_t gc = 1;
+    uint8_t gc = 0;
 
     while (1) {
         opcode = dlvm_next_op(vm);
@@ -155,7 +155,16 @@ void dlvm_exec(dlvm_t *vm) {
                 dlvm_push(vm, res);
                 break;
             case PUSH:
-                r1 = init_int(dlvm_next_op(vm));
+                switch (dlvm_next_op(vm)) {
+                    case INT:
+                        r1 = init_int(dlvm_next_op(vm));
+                        break;
+                    case FLOAT:
+                        r1 = init_float(dlvm_next_op(vm));
+                        break;
+                    default:
+                        return;
+                }
                 dlvm_push(vm, r1);
                 break;
             case POP:
@@ -175,7 +184,7 @@ void dlvm_exec(dlvm_t *vm) {
                 return;
         }
 
-        if (!gc++) {
+        if (!(++gc)) {
             dlvm_gc_mark_and_sweep(vm);
         }
     }
