@@ -168,3 +168,82 @@ ttype_t *modulo(ttype_t *r1, ttype_t *r2) {
 
     return init_error("something happened while dividing\n");
 }
+
+ttype_t *append_list(ttype_t *list, ttype_t *obj) {
+    tlist_t *l = (tlist_t *)list;
+    return insert_into_list(list, obj, l->elements+1);
+}
+
+ttype_t *prepend_list(ttype_t *list, ttype_t *obj) {
+    return insert_into_list(list, obj, 0);
+}
+
+ttype_t *insert_into_list(ttype_t *list, ttype_t *obj, uint64_t pos) {
+    tlist_t *l = (tlist_t *)list;
+
+    if (l->elements == UINT64_MAX) {
+        return init_error("list reached maximum capacity\n");
+    } else if (pos > l->elements + 1) {
+        return init_error("out of bounds error while inserting into list\n");
+    } else if (l->elements == l->arr_len) {
+        ttype_t *res = grow_list(l);
+
+        switch (res->t) {
+            case ERROR:
+                return res;
+            default:
+                l = (tlist_t *)res;
+        }
+    }
+
+    ttype_t **n_list = malloc(sizeof(ttype_t *) * l->arr_len);
+    n_list[pos] = obj;
+    memcpy(n_list[0], l->list[0], sizeof(ttype_t *) * pos);
+    memcpy(n_list[pos+1], l->list[pos], sizeof(ttype_t *) * l->elements - pos);
+
+    free(l->list);
+
+    l->list = n_list;
+
+    return (ttype_t *)l;
+}
+
+ttype_t *overwrite_list(ttype_t *list, ttype_t *obj, uint64_t pos) {
+    tlist_t *l = (tlist_t *)list;
+
+    if (pos > l->elements + 1) {
+        return init_error("out of bounds error while overwriting position in list\n");
+    }
+
+    l->list[pos] = obj;
+
+    return (ttype_t *)l;
+}
+
+ttype_t *access_list(ttype_t *list, uint64_t pos) {
+    tlist_t *l = (tlist_t *)list;
+
+    if (pos > l->elements + 1) {
+        return init_error("out of bounds error while accessing list\n");
+    }
+
+    return l->list[pos];
+}
+
+ttype_t *grow_list(tlist_t *list) {
+    tlist_t *l = (tlist_t *)list;
+
+    if (l->elements == UINT64_MAX) {
+        return init_error("list reached maximum capacity\n");
+    }
+
+    ttype_t **n_list = malloc(sizeof(ttype_t *) * l->arr_len * 2);
+    memcpy(n_list[0], l->list[0], sizeof(ttype_t *) * l->elements);
+   
+    free(l->list);
+
+    l->list = n_list;
+    l->arr_len *= 2;
+
+    return (ttype_t *)l;
+}

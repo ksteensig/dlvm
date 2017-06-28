@@ -30,6 +30,8 @@ typedef enum opcode_e {
     INSERT_LIST = 0x09,
     SET_LIST = 0x0A,
     ACCESS_LIST = 0x0B,
+    CALL = 0x0C,
+    RET = 0x0D,
     PRINT = 0xFE,
-    HALT = 0xFF,
+    HALT = 0xFF
 } opcode_t;

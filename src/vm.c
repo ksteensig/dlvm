@@ -161,6 +161,10 @@ void dlvm_exec(dlvm_t *vm) {
             case POP:
                 dlvm_pop(vm);
                 break;
+            case CALL:
+                break;
+            case RET:
+                break;
             case PRINT:
                 r1 = dlvm_pop(vm);
                 printf("%ld\n", ((tint_t *)r1)->v);

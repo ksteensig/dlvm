@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 typedef enum type_e {
     NIL         = 0,
@@ -58,7 +59,7 @@ typedef struct tlist_s {
     ttype_t *next;
     bool marked;
 
-    ttype_t *list;
+    ttype_t **list;
     uint64_t arr_len;
     uint64_t elements;
 } tlist_t;
@@ -68,7 +69,7 @@ typedef struct tfun_s {
     struct ttype_s *next;
     bool marked;
 
-    uint8_t argc;
+    uint64_t argc;
     uint64_t addr;
     uint64_t *env;
 } tfun_t;
@@ -109,4 +110,20 @@ ttype_t *multiply(ttype_t *r1, ttype_t *r2);
 ttype_t *divide(ttype_t *r1, ttype_t *r2);
 ttype_t *modulo(ttype_t *r1, ttype_t *r2);
 
-ttype_t *insert_list(ttype_t *list, ttype_t *obj);
+// append object into list
+ttype_t *append_list(ttype_t *list, ttype_t *obj);
+
+// prepend object into list
+ttype_t *prepend_list(ttype_t *list, ttype_t *obj);
+
+// insert between objects in a list
+ttype_t *insert_into_list(ttype_t *list, ttype_t *obj, uint64_t pos);
+
+// overwrite a position in a list, there has to be an existing object
+ttype_t *overwrite_list(ttype_t *list, ttype_t *obj, uint64_t pos);
+
+// access an element of a list
+ttype_t *access_list(ttype_t *list, uint64_t pos);
+
+// internal api to grow the list as it's implemented as a flex array
+ttype_t *grow_list(tlist_t *list);
