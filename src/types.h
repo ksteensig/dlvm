@@ -71,7 +71,6 @@ typedef struct tfun_s {
 
     uint64_t argc;
     uint64_t addr;
-    uint64_t *env;
 } tfun_t;
 
 typedef struct terror_s {
@@ -96,6 +95,9 @@ void free_char(ttype_t *r1);
 
 ttype_t *init_list();
 void free_list(ttype_t *list);
+
+ttype_t *init_fun(uint64_t argc, uint64_t addr);
+void free_fun(ttype_t *fun);
 
 ttype_t *init_error(char *msg);
 void free_error(ttype_t *err);

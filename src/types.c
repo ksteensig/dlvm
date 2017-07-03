@@ -69,6 +69,21 @@ void free_list(ttype_t *list) {
     free((tlist_t *)list);
 }
 
+ttype_t *init_fun(uint64_t argc, uint64_t addr) {
+    tfun_t *fun = malloc(sizeof(tfun_t));
+    fun->t = FUNCTION;
+    fun->marked = false;
+
+    fun->addr = addr;
+    fun->argc = argc;
+
+    return (ttype_t *)fun;
+}
+
+void free_fun(ttype_t *fun) {
+    free((tfun_t *)fun);
+}
+
 ttype_t *init_error(char *msg) {
     terror_t *err = malloc(sizeof(terror_t));
     err->t = ERROR;
