@@ -4,4 +4,6 @@ inc = include_directories('src')
 
 subdir('src')
 
-executable('dlvm', 'main.c', link_with : dlvmlib, include_directories : inc)
+args = ['-std=c11']
+
+executable('dlvm', 'main.c', c_args:args, link_with : dlvmlib, include_directories : inc)
