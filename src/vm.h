@@ -62,3 +62,5 @@ void dlvm_gc_sweep(dlvm_t *vm);
 void dlvm_gc_reset_marked(dlvm_t *vm);
 
 void dlvm_gc_mark_and_sweep(dlvm_t *vm);
+
+bool check_and_print_error(dlvm_t *vm);

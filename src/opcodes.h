@@ -15,6 +15,9 @@ typedef enum opcode_e {
     INVOKE = 0x0D,
     LOAD = 0x0E,
     GLOAD = 0x0F,
+    AND = 0x10,
+    OR = 0x11,
+    NOT = 0x12,
     PRINT = 0xFE,
     HALT = 0xFF
 } opcode_t;

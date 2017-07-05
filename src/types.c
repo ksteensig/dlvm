@@ -184,6 +184,34 @@ ttype_t *modulo(ttype_t *r1, ttype_t *r2) {
     return init_error("something happened while dividing\n");
 }
 
+bool is_bool(ttype_t *r) {
+    return (r->t == BOOL);
+}
+
+ttype_t *and(ttype_t *r1, ttype_t *r2) {
+    if (!is_bool(r1) || !is_bool(r2)) {
+        return NULL;
+    } else {
+        return init_bool(((tbool_t *)r1)->v && ((tbool_t *)r2)->v);
+    }
+}
+
+ttype_t *or(ttype_t *r1, ttype_t *r2) {
+    if (!is_bool(r1) || !is_bool(r2)) {
+        return NULL;
+    } else {
+        return init_bool(((tbool_t *)r1)->v || ((tbool_t *)r2)->v);
+    }
+}
+
+ttype_t *not(ttype_t *r) {
+    if (!is_bool(r)) {
+        return NULL;
+    } else {
+        return init_bool(!((tbool_t *)r)->v);
+    }
+}
+
 ttype_t *append_list(ttype_t *list, ttype_t *obj) {
     tlist_t *l = (tlist_t *)list;
     return insert_into_list(list, obj, l->elements+1);

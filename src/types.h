@@ -112,6 +112,12 @@ ttype_t *multiply(ttype_t *r1, ttype_t *r2);
 ttype_t *divide(ttype_t *r1, ttype_t *r2);
 ttype_t *modulo(ttype_t *r1, ttype_t *r2);
 
+bool is_bool(ttype_t *r);
+
+ttype_t *and(ttype_t *r1, ttype_t *r2);
+ttype_t *or(ttype_t *r1, ttype_t *r2);
+ttype_t *not(ttype_t *r);
+
 // append object into list
 ttype_t *append_list(ttype_t *list, ttype_t *obj);
 

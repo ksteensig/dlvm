@@ -127,6 +127,20 @@ void dlvm_gc_mark_and_sweep(dlvm_t *vm) {
     dlvm_gc_reset_marked(vm);
 }
 
+bool check_and_print_error(dlvm_t *vm) {
+    ttype_t *typ = vm->stack->stack[vm->stack->stack_size - 1];
+    terror_t *err;
+
+
+    if (typ->t == ERROR) {
+        err = typ;
+        printf(err->msg);
+        return true;
+    }
+
+    return false;
+}
+
 void dlvm_exec(dlvm_t *vm) {
     opcode_t opcode;
     ttype_t *r1, *r2, *res;
@@ -165,6 +179,20 @@ void dlvm_exec(dlvm_t *vm) {
                 res = modulo(r1, r2);
                 dlvm_push(vm, res);
                 break;
+            case AND:
+                r1 = dlvm_pop(vm);
+                r2 = dlvm_pop(vm);
+                res = and(r1, r2);
+                dlvm_push(vm, res);
+            case OR:
+                r1 = dlvm_pop(vm);
+                r2 = dlvm_pop(vm);
+                res = or(r1, r2);
+                dlvm_push(vm, res);
+            case NOT:
+                r1 = dlvm_pop(vm);
+                res = not(r1);
+                dlvm_push(vm, res);
             case PUSH:
                 switch (dlvm_next_op(vm)) {
                     case BOOL:
@@ -246,6 +274,10 @@ void dlvm_exec(dlvm_t *vm) {
                 return;
             default:
                 return;
+        }
+
+        if (check_and_print_error(vm)) {
+            return;
         }
 
         if (!(++gc)) {
