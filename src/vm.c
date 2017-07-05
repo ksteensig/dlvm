@@ -133,7 +133,7 @@ bool check_and_print_error(dlvm_t *vm) {
 
 
     if (typ->t == ERROR) {
-        err = typ;
+        err = (terror_t *)typ;
         printf(err->msg);
         return true;
     }

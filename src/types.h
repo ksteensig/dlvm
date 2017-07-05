@@ -16,12 +16,14 @@ typedef enum type_e {
 } type_t;
 
 /* type to convert to */
+#pragma pack(4)
 typedef struct ttype_s {
     type_t t;
     struct ttype_s *next;
     bool marked;
 } ttype_t;
 
+#pragma pack(4)
 typedef struct tbool_s {
     type_t t;
     ttype_t *next;
@@ -30,6 +32,7 @@ typedef struct tbool_s {
     bool v;
 } tbool_t;
 
+#pragma pack(4)
 typedef struct tint_s {
     type_t t;
     ttype_t *next;
@@ -38,6 +41,7 @@ typedef struct tint_s {
     int64_t v;
 } tint_t;
 
+#pragma pack(4)
 typedef struct tfloat_s {
     type_t t;
     ttype_t *next;
@@ -46,6 +50,7 @@ typedef struct tfloat_s {
     double v;
 } tfloat_t;
 
+#pragma pack(4)
 typedef struct tchar_s {
     type_t t;
     ttype_t *next;
@@ -54,6 +59,7 @@ typedef struct tchar_s {
     char v;
 } tchar_t;
 
+#pragma pack(4)
 typedef struct tlist_s {
     type_t t;
     ttype_t *next;
@@ -64,6 +70,7 @@ typedef struct tlist_s {
     uint64_t elements;
 } tlist_t;
 
+#pragma pack(4)
 typedef struct tfun_s {
     type_t t;
     struct ttype_s *next;
@@ -73,6 +80,7 @@ typedef struct tfun_s {
     uint64_t addr;
 } tfun_t;
 
+#pragma pack(4)
 typedef struct terror_s {
     type_t t;
     ttype_t *next;
