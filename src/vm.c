@@ -81,7 +81,6 @@ void dlvm_gc_sweep(dlvm_t *vm) {
     while (current != NULL) {
         if (current->marked == false) {
             next = current->next;
-            
             switch (current->t) {
                 case BOOL:
                     free_bool(current);
@@ -103,13 +102,12 @@ void dlvm_gc_sweep(dlvm_t *vm) {
                 default:
                     free(current);
             }
-
             current = next;
         } else {
             next = current->next;
             current = next;
-    }
         }
+    }
 }
 
 void dlvm_gc_reset_marked(dlvm_t *vm) {
@@ -132,7 +130,6 @@ void dlvm_gc_mark_and_sweep(dlvm_t *vm) {
 void dlvm_exec(dlvm_t *vm) {
     opcode_t opcode;
     ttype_t *r1, *r2, *res;
-
     uint8_t gc = 0;
 
     while (1) {
@@ -170,12 +167,18 @@ void dlvm_exec(dlvm_t *vm) {
                 break;
             case PUSH:
                 switch (dlvm_next_op(vm)) {
+                    case BOOL:
+                        r1 = init_int((bool)dlvm_next_op(vm));
                     case INT:
                         r1 = init_int(dlvm_next_op(vm));
                         break;
                     case FLOAT:
                         r1 = init_float((double)dlvm_next_op(vm));
                         break;
+                    case CHAR:
+                        r1 = init_char((char)dlvm_next_op(vm));
+                    case LIST:
+                        r1 = init_list();
                     case FUNCTION:
                         // first arg is argc and second arg is addr
                         r1 = init_fun(dlvm_next_op(vm), dlvm_next_op(vm));
@@ -184,8 +187,41 @@ void dlvm_exec(dlvm_t *vm) {
                 }
                 dlvm_push(vm, r1);
                 break;
+            case LOAD:
+                r1 = dlvm_pop(vm);
+                dlvm_push(vm, vm->stack->stack[vm->fp - (uint64_t)((tint_t *)r1)->v]);
+                break;
+            case GLOAD:
+                r1 = dlvm_pop(vm);
+                dlvm_push(vm, vm->stack->stack[(uint64_t)((tint_t *)r1)->v]);
+                break;
             case POP:
                 dlvm_pop(vm);
+                break;
+            case INSERT_LIST:
+                r1 = dlvm_pop(vm);
+                r2 = dlvm_pop(vm);
+                res = insert_into_list(r1, r2, dlvm_next_op(vm));
+                dlvm_push(vm, res);
+                break;
+            case SET_LIST:
+                r1 = dlvm_pop(vm);
+                r2 = dlvm_pop(vm);
+                res = overwrite_list(r1, r2, dlvm_next_op(vm));
+                dlvm_push(vm, res);
+                break;
+            case ACCESS_LIST:
+                r1 = dlvm_pop(vm);
+                res = access_list(r1, dlvm_next_op(vm));
+                dlvm_push(vm, res);
+                break;
+            case INVOKE: // invoke function object
+                r1 = dlvm_pop(vm);
+                dlvm_push(vm, init_int(((tfun_t *)r1)->argc));
+                dlvm_push(vm, init_int(vm->fp));
+                dlvm_push(vm, init_int(vm->pc));
+                vm->fp = vm->sp;
+                vm->pc = ((tfun_t *)r1)->addr;
                 break;
             case CALL: // invoke procedure
                 dlvm_push(vm, init_int(dlvm_next_op(vm))); // push argc to stack
@@ -201,14 +237,6 @@ void dlvm_exec(dlvm_t *vm) {
                 vm->fp = (uint64_t)((tint_t *)dlvm_pop(vm))->v;
                 vm->sp -= (uint64_t)((tint_t *)dlvm_pop(vm))->v;
                 dlvm_push(vm, r1); // push result back to stack
-                break;
-            case INVOKE: // invoke function object
-                r1 = dlvm_pop(vm);
-                dlvm_push(vm, init_int(((tfun_t *)r1)->argc));
-                dlvm_push(vm, init_int(vm->fp));
-                dlvm_push(vm, init_int(vm->pc));
-                vm->fp = vm->sp;
-                vm->pc = ((tfun_t *)r1)->addr;
                 break;
             case PRINT:
                 r1 = dlvm_pop(vm);
