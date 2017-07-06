@@ -128,9 +128,8 @@ void dlvm_gc_mark_and_sweep(dlvm_t *vm) {
 }
 
 bool check_and_print_error(dlvm_t *vm) {
-    ttype_t *typ = vm->stack->stack[vm->stack->stack_size - 1];
+    ttype_t *typ = vm->stack->stack[vm->sp - 1];
     terror_t *err;
-
 
     if (typ->t == ERROR) {
         err = (terror_t *)typ;

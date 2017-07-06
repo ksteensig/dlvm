@@ -2,7 +2,7 @@
 
 int main(int argc, char* argv[])
 {
-    uint64_t prog[] = {PUSH, 10, PUSH, 2, MUL, PRINT, HALT};
+    uint64_t prog[] = {PUSH, INT, 10, PUSH, INT, 2, MUL, PRINT, HALT};
 
     stack_t *stack = stack_init(100);
     program_t *program = malloc(sizeof(program_t));
