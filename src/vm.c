@@ -123,8 +123,11 @@ void dlvm_gc_reset_marked(dlvm_t *vm) {
 
 void dlvm_gc_mark_and_sweep(dlvm_t *vm) {
     dlvm_gc_mark(vm);
+    printf("marked\n");
     dlvm_gc_sweep(vm);
+    printf("sweeped\n");
     dlvm_gc_reset_marked(vm);
+    printf("reset\n");
 }
 
 bool check_and_print_error(dlvm_t *vm) {
@@ -264,6 +267,9 @@ void dlvm_exec(dlvm_t *vm) {
                 vm->fp = (uint64_t)((tint_t *)dlvm_pop(vm))->v;
                 vm->sp -= (uint64_t)((tint_t *)dlvm_pop(vm))->v;
                 dlvm_push(vm, r1); // push result back to stack
+                break;
+            case JMP:
+                vm->pc = (uint64_t)dlvm_next_op(vm);
                 break;
             case PRINT:
                 r1 = dlvm_pop(vm);

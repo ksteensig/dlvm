@@ -5,6 +5,7 @@ ttype_t *init_bool(bool v) {
     res->v = v;
     res->t = BOOL;
     res->marked = false;
+    res->next = NULL;
 
     return (ttype_t *)res;
 }
@@ -18,6 +19,7 @@ ttype_t *init_int(int64_t v) {
     res->v = v;
     res->t = INT;
     res->marked = false;
+    res->next = NULL;
 
     return (ttype_t *)res;
 }
@@ -31,6 +33,7 @@ ttype_t *init_float(double v) {
     res->v = v;
     res->t = FLOAT;
     res->marked = false;
+    res->next = NULL;
 
     return (ttype_t *)res;
 }
@@ -44,6 +47,7 @@ ttype_t *init_char(char v) {
     res->v = v;
     res->t = CHAR;
     res->marked = false;
+    res->next = NULL;
 
     return (ttype_t *)res;
 }
@@ -56,6 +60,7 @@ ttype_t *init_list() {
     tlist_t *res = malloc(sizeof(tlist_t));
     res->t = LIST;
     res->marked = false;
+    res->next = NULL;
 
     res->list = malloc(sizeof(ttype_t *) * 2);
     res->arr_len = 2;
@@ -73,6 +78,7 @@ ttype_t *init_fun(uint64_t argc, uint64_t addr) {
     tfun_t *fun = malloc(sizeof(tfun_t));
     fun->t = FUNCTION;
     fun->marked = false;
+    fun->next = NULL;
 
     fun->addr = addr;
     fun->argc = argc;
@@ -88,6 +94,8 @@ ttype_t *init_error(char *msg) {
     terror_t *err = malloc(sizeof(terror_t));
     err->t = ERROR;
     err->marked = false;
+    err->next = NULL;
+
     err->msg = msg;
 
     return (ttype_t *)err;

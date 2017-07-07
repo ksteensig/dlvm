@@ -18,6 +18,9 @@ typedef enum opcode_e {
     AND = 0x10,
     OR = 0x11,
     NOT = 0x12,
+    JMP = 0x13,
+    JMPF = 0x14,
+    JMPT = 0x15,
     PRINT = 0xFE,
     HALT = 0xFF
 } opcode_t;
