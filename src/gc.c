@@ -35,6 +35,7 @@ void dlvm_gc_sweep(dlvm_t *vm) {
                     break;
                 case FUNCTION:
                     free_fun(current);
+                    break;
                 default:
                     free(current);
             }
@@ -55,4 +56,10 @@ void dlvm_gc_reset_marked(dlvm_t *vm) {
             break;
         }
     }
+}
+
+void dlvm_gc_run(dlvm_t *vm) {
+    dlvm_gc_mark(vm);
+    dlvm_gc_sweep(vm);
+    dlvm_gc_reset_marked(vm);
 }

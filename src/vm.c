@@ -63,25 +63,3 @@ ttype_t *dlvm_pop(dlvm_t *vm) {
 
     return ret;
 }
-
-void dlvm_gc_mark_and_sweep(dlvm_t *vm) {
-    dlvm_gc_mark(vm);
-    printf("marked\n");
-    dlvm_gc_sweep(vm);
-    printf("sweeped\n");
-    dlvm_gc_reset_marked(vm);
-    printf("reset\n");
-}
-
-bool check_and_print_error(dlvm_t *vm) {
-    ttype_t *typ = vm->stack->stack[vm->sp - 1];
-    terror_t *err;
-
-    if (typ->t == ERROR) {
-        err = (terror_t *)typ;
-        printf(err->msg);
-        return true;
-    }
-
-    return false;
-}

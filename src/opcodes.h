@@ -1,3 +1,5 @@
+#pragma once
+
 typedef enum opcode_e {
     NOP = 0x00,
     ADD = 0x01,

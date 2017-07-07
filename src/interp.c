@@ -1,5 +1,138 @@
 #include "interp.h"
 
+bool check_and_print_error(dlvm_t *vm) {
+    ttype_t *typ = vm->stack->stack[vm->sp - 1];
+    terror_t *err;
+
+    if (typ->t == ERROR) {
+        err = (terror_t *)typ;
+        printf(err->msg);
+        return true;
+    }
+
+    return false;
+}
+
+void _ADD(dlvm_t *vm) {
+    ttype_t *r1, *r2, *res;
+    r1 = dlvm_pop(vm);
+    r2 = dlvm_pop(vm);
+    res = add(r1, r2);
+    dlvm_push(vm, res);
+}
+
+void _SUB(dlvm_t *vm) {
+    ttype_t *r1, *r2, *res;
+    r1 = dlvm_pop(vm);
+    r2 = dlvm_pop(vm);
+    res = subtract(r1, r2);
+    dlvm_push(vm, res);
+}
+
+void _MUL(dlvm_t *vm) {
+    ttype_t *r1, *r2, *res;
+    r1 = dlvm_pop(vm);
+    r2 = dlvm_pop(vm);
+    res = multiply(r1, r2);
+    dlvm_push(vm, res);
+}
+
+void _DIV(dlvm_t *vm) {
+    ttype_t *r1, *r2, *res;
+    r1 = dlvm_pop(vm);
+    r2 = dlvm_pop(vm);
+    res = divide(r1, r2);
+    dlvm_push(vm, res);
+}
+
+void _MOD(dlvm_t *vm) {
+    ttype_t *r1, *r2, *res;
+    r1 = dlvm_pop(vm);
+    r2 = dlvm_pop(vm);
+    res = modulo(r1, r2);
+    dlvm_push(vm, res);
+}
+
+void _AND(dlvm_t *vm) {
+    ttype_t *r1, *r2, *res;
+    r1 = dlvm_pop(vm);
+    r2 = dlvm_pop(vm);
+    res = and(r1, r2);
+    dlvm_push(vm, res);
+}
+
+void _OR(dlvm_t *vm) {
+    ttype_t *r1, *r2, *res;
+    r1 = dlvm_pop(vm);
+    r2 = dlvm_pop(vm);
+    res = or(r1, r2);
+    dlvm_push(vm, res);
+}
+
+void _NOT(dlvm_t *vm) {
+    ttype_t *r1, *res;
+    r1 = dlvm_pop(vm);
+    res = not(r1);
+    dlvm_push(vm, res);
+}
+
+void _PUSH(dlvm_t *vm) {
+    ttype_t *r1;
+    uint64_t type = dlvm_next_op(vm);
+
+    switch (type) {
+        case BOOL:
+            r1 = init_int((bool)dlvm_next_op(vm));
+        case INT:
+            r1 = init_int(dlvm_next_op(vm));
+            break;
+        case FLOAT:
+            r1 = init_float((double)dlvm_next_op(vm));
+            break;
+        case CHAR:
+            r1 = init_char((char)dlvm_next_op(vm));
+            break;
+        case LIST:
+            r1 = init_list();
+            break;
+        case FUNCTION:
+            // first arg is argc and second arg is addr
+            r1 = init_fun(dlvm_next_op(vm), dlvm_next_op(vm));
+        default:
+            return;
+    }
+    
+    dlvm_push(vm, r1);
+}
+
+void _POP(dlvm_t *vm) {
+    dlvm_pop(vm);
+}
+
+void _LOAD(dlvm_t *vm) {
+    tint_t *offset;
+    ttype_t *r1 = dlvm_pop(vm);
+
+    if (r1->t == INT) {
+        offset = (tint_t *)r1;
+        dlvm_push(vm, vm->stack->stack[vm->fp - (uint64_t)offset->v]);
+    } else {
+        
+    }
+}
+
+void _GLOAD(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    tint_t *addr;
+
+    if (r1->t == INT) {
+        addr = (tint_t *)r1;
+        dlvm_push(vm, vm->stack->stack[(uint64_t)addr->v]);
+    } else {
+        
+    }
+}
+
 void dlvm_exec(dlvm_t *vm) {
     opcode_t opcode;
     ttype_t *r1, *r2, *res;
@@ -9,81 +142,40 @@ void dlvm_exec(dlvm_t *vm) {
         opcode = dlvm_next_op(vm);
         switch(opcode) {
             case ADD:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = add(r1, r2);
-                dlvm_push(vm, res);
+                _ADD(vm);
                 break;
             case MUL:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = multiply(r1, r2);
-                dlvm_push(vm, res);
+                _MUL(vm);
                 break;
             case SUB:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = subtract(r1, r2);
-                dlvm_push(vm, res);
+                _SUB(vm);
                 break;
             case DIV:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = divide(r1, r2);
-                dlvm_push(vm, res);
+                _DIV(vm);
                 break;
             case MOD:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = modulo(r1, r2);
-                dlvm_push(vm, res);
+                _MOD(vm);
                 break;
             case AND:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = and(r1, r2);
-                dlvm_push(vm, res);
+                _AND(vm);
+                break;
             case OR:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = or(r1, r2);
-                dlvm_push(vm, res);
+                _OR(vm);
+                break;
             case NOT:
-                r1 = dlvm_pop(vm);
-                res = not(r1);
-                dlvm_push(vm, res);
+                _NOT(vm);
+                break;
             case PUSH:
-                switch (dlvm_next_op(vm)) {
-                    case BOOL:
-                        r1 = init_int((bool)dlvm_next_op(vm));
-                    case INT:
-                        r1 = init_int(dlvm_next_op(vm));
-                        break;
-                    case FLOAT:
-                        r1 = init_float((double)dlvm_next_op(vm));
-                        break;
-                    case CHAR:
-                        r1 = init_char((char)dlvm_next_op(vm));
-                    case LIST:
-                        r1 = init_list();
-                    case FUNCTION:
-                        // first arg is argc and second arg is addr
-                        r1 = init_fun(dlvm_next_op(vm), dlvm_next_op(vm));
-                    default:
-                        return;
-                }
-                dlvm_push(vm, r1);
-                break;
-            case LOAD:
-                r1 = dlvm_pop(vm);
-                dlvm_push(vm, vm->stack->stack[vm->fp - (uint64_t)((tint_t *)r1)->v]);
-                break;
-            case GLOAD:
-                r1 = dlvm_pop(vm);
-                dlvm_push(vm, vm->stack->stack[(uint64_t)((tint_t *)r1)->v]);
+                _PUSH(vm);
                 break;
             case POP:
-                dlvm_pop(vm);
+                _POP(vm);
+                break;
+            case LOAD:
+                _LOAD(vm);
+                break;
+            case GLOAD:
+                _GLOAD(vm);
                 break;
             case INSERT_LIST:
                 r1 = dlvm_pop(vm);
@@ -132,7 +224,7 @@ void dlvm_exec(dlvm_t *vm) {
                 r1 = dlvm_pop(vm);
                 printf("%ld\n", ((tint_t *)r1)->v);
             case HALT:
-                dlvm_gc_mark_and_sweep(vm);
+                dlvm_gc_run(vm);
                 return;
             default:
                 return;
@@ -143,7 +235,7 @@ void dlvm_exec(dlvm_t *vm) {
         }
 
         if (!(++gc)) {
-            dlvm_gc_mark_and_sweep(vm);
+            dlvm_gc_run(vm);
         }
     }
 }

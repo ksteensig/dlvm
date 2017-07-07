@@ -18,13 +18,11 @@ typedef enum type_e {
 } type_t;
 
 /* type to convert to */
-
 typedef struct ttype_s {
     type_t t;
     struct ttype_s *next;
     bool marked;
 } ttype_t;
-
 
 typedef struct tbool_s {
     type_t t;
@@ -34,7 +32,6 @@ typedef struct tbool_s {
     bool v;
 } tbool_t;
 
-
 typedef struct tint_s {
     type_t t;
     ttype_t *next;
@@ -42,7 +39,6 @@ typedef struct tint_s {
 
     int64_t v;
 } tint_t;
-
 
 typedef struct tfloat_s {
     type_t t;
@@ -52,7 +48,6 @@ typedef struct tfloat_s {
     double v;
 } tfloat_t;
 
-
 typedef struct tchar_s {
     type_t t;
     ttype_t *next;
@@ -60,7 +55,6 @@ typedef struct tchar_s {
 
     char v;
 } tchar_t;
-
 
 typedef struct tlist_s {
     type_t t;
@@ -72,7 +66,6 @@ typedef struct tlist_s {
     uint64_t elements;
 } tlist_t;
 
-
 typedef struct tfun_s {
     type_t t;
     struct ttype_s *next;
@@ -82,12 +75,17 @@ typedef struct tfun_s {
     uint64_t addr;
 } tfun_t;
 
-
 typedef struct terror_s {
     type_t t;
     ttype_t *next;
     bool marked;
 
+    uint64_t stack_pos;
+    uint8_t stack_range;
+
+    uint64_t opcode_pos;
+    uint8_t opcode_range;
+    
     char *msg;
 } terror_t;
 
@@ -116,6 +114,20 @@ bool is_number(ttype_t *r);
 bool is_float(ttype_t *r);
 bool is_int(ttype_t *r);
 
+ttype_t *add_ints(tint_t *r1, tint_t *r2);
+ttype_t *subtract_ints(tint_t *r1, tint_t *r2);
+ttype_t *multiply_ints(tint_t *r1, tint_t *r2);
+ttype_t *divide_ints(tint_t *r1, tint_t *r2);
+ttype_t *modulo_ints(tint_t *r1, tint_t *r2);
+
+tfloat_t *int_to_float(tint_t *r1);
+
+ttype_t *add_floats(tfloat_t *r1, tfloat_t *r2);
+ttype_t *subtract_floats(tfloat_t *r1, tfloat_t *r2);
+ttype_t *multiply_floats(tfloat_t *r1, tfloat_t *r2);
+ttype_t *divide_floats(tfloat_t *r1, tfloat_t *r2);
+
+// external arithmetic API that does the typechecking
 ttype_t *add(ttype_t *r1, ttype_t *r2);
 ttype_t *subtract(ttype_t *r1, ttype_t *r2);
 ttype_t *multiply(ttype_t *r1, ttype_t *r2);

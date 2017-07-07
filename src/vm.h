@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "types.h"
+#include "opcodes.h"
 
 /*
 typedef struct {
@@ -54,4 +55,6 @@ stack_t *stack_init(uint64_t stack_size);
 
 //heap_t *heap_obj_init(char *name, uint64_t start, uint64_t end);
 
-bool check_and_print_error(dlvm_t *vm);
+void dlvm_push(dlvm_t *vm, ttype_t *v);
+ttype_t *dlvm_pop(dlvm_t *vm);
+uint64_t dlvm_next_op(dlvm_t *vm);

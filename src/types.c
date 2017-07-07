@@ -118,17 +118,57 @@ bool is_number(ttype_t *r) {
     return (is_int(r) || is_float(r));
 }
 
+ttype_t *add_ints(tint_t *r1, tint_t *r2) {
+    return (ttype_t *)init_int(r1->v + r2->v);
+}
+
+ttype_t *subtract_ints(tint_t *r1, tint_t *r2) {
+    return (ttype_t *)init_int(r1->v - r2->v);
+}
+
+ttype_t *multiply_ints(tint_t *r1, tint_t *r2) {
+    return (ttype_t *)init_int(r1->v * r2->v);
+}
+
+ttype_t *divide_ints(tint_t *r1, tint_t *r2) {
+    return (ttype_t *)init_int(r1->v / r2->v);
+}
+
+ttype_t *modulo_ints(tint_t *r1, tint_t *r2) {
+    return (ttype_t *)init_int(r1->v % r2->v);
+}
+
+tfloat_t *int_to_float(tint_t *r1) {
+    return (tfloat_t *)init_float(r1->v);
+}
+
+ttype_t *add_floats(tfloat_t *r1, tfloat_t *r2) {
+    return (ttype_t *)init_float(r1->v + r2->v);
+}
+
+ttype_t *subtract_floats(tfloat_t *r1, tfloat_t *r2) {
+    return (ttype_t *)init_float(r1->v - r2->v);
+}
+
+ttype_t *multiply_floats(tfloat_t *r1, tfloat_t *r2) {
+    return (ttype_t *)init_float(r1->v * r2->v);
+}
+
+ttype_t *divide_floats(tfloat_t *r1, tfloat_t *r2) {
+    return (ttype_t *)init_float(r1->v / r2->v);
+}
+
 ttype_t *add(ttype_t *r1, ttype_t *r2) {
     if (!is_number(r1) || !is_number(r2)) {
         return init_error("adding one or two non-numbers\n");
     } else if (is_float(r1) && is_float(r2)) {
-        return init_float(((tfloat_t *)r1)->v + ((tfloat_t *)r2)->v);
+        return add_floats((tfloat_t *)r1, (tfloat_t *)r2);
     } else if (is_int(r1) && is_int(r2)) {
-        return init_int(((tint_t *)r1)->v + ((tint_t *)r2)->v);
+        return add_ints((tint_t *)r1, (tint_t *)r2);
     } else if (is_int(r1) && is_float(r2)) {
-        return init_float(((tint_t *)r1)->v + ((tfloat_t *)r2)->v);
+        return add_floats(int_to_float((tint_t *)r1), (tfloat_t *)r2);
     } else if (is_float(r1) && is_int(r2)) {
-        return init_float(((tfloat_t *)r1)->v + ((tint_t *)r2)->v);
+        return add_floats((tfloat_t *)r1, int_to_float((tint_t *)r2));
     }
 
     return init_error("something happened while adding\n");
@@ -138,13 +178,13 @@ ttype_t *subtract(ttype_t *r1, ttype_t *r2) {
     if (!is_number(r1) || !is_number(r2)) {
         return init_error("subtracting one or two non-numbers\n");
     } else if (is_float(r1) && is_float(r2)) {
-        return init_float(((tfloat_t *)r1)->v - ((tfloat_t *)r2)->v);
+        return subtract_floats((tfloat_t *)r1, (tfloat_t *)r2);
     } else if (is_int(r1) && is_int(r2)) {
-        return init_int(((tint_t *)r1)->v - ((tint_t *)r2)->v);
+        return subtract_ints((tint_t *)r1, (tint_t *)r2);
     } else if (is_int(r1) && is_float(r2)) {
-        return init_float(((tint_t *)r1)->v - ((tfloat_t *)r2)->v);
+        return subtract_floats(int_to_float((tint_t *)r1), (tfloat_t *)r2);
     } else if (is_float(r1) && is_int(r2)) {
-        return init_float(((tfloat_t *)r1)->v - ((tint_t *)r2)->v);
+        return subtract_floats((tfloat_t *)r1, int_to_float((tint_t *)r2));
     }
 
     return init_error("something happened while subtracting\n");
@@ -154,13 +194,13 @@ ttype_t *multiply(ttype_t *r1, ttype_t *r2) {
     if (!is_number(r1) || !is_number(r2)) {
         return init_error("multiplying one or two non-numbers\n");
     } else if (is_float(r1) && is_float(r2)) {
-        return init_float(((tfloat_t *)r1)->v * ((tfloat_t *)r2)->v);
+        return multiply_floats((tfloat_t *)r1, (tfloat_t *)r2);
     } else if (is_int(r1) && is_int(r2)) {
-        return init_int(((tint_t *)r1)->v * ((tint_t *)r2)->v);
+        return multiply_ints((tint_t *)r1, (tint_t *)r2);
     } else if (is_int(r1) && is_float(r2)) {
-        return init_float(((tint_t *)r1)->v * ((tfloat_t *)r2)->v);
+        return multiply_floats(int_to_float((tint_t *)r1), (tfloat_t *)r2);
     } else if (is_float(r1) && is_int(r2)) {
-        return init_float(((tfloat_t *)r1)->v * ((tint_t *)r2)->v);
+        return multiply_floats((tfloat_t *)r1, int_to_float((tint_t *)r2));
     }
 
     return init_error("something happened while multiplying\n");
@@ -170,13 +210,13 @@ ttype_t *divide(ttype_t *r1, ttype_t *r2) {
     if (!is_number(r1) || !is_number(r2)) {
         return init_error("dividing one or two non-numbers\n");
     } else if (is_float(r1) && is_float(r2)) {
-        return init_float(((tfloat_t *)r1)->v / ((tfloat_t *)r2)->v);
+        return divide_floats((tfloat_t *)r1, (tfloat_t *)r2);
     } else if (is_int(r1) && is_int(r2)) {
-        return init_int(((tint_t *)r1)->v / ((tint_t *)r2)->v);
+        return divide_ints((tint_t *)r1, (tint_t *)r2);
     } else if (is_int(r1) && is_float(r2)) {
-        return init_float(((tint_t *)r1)->v / ((tfloat_t *)r2)->v);
+        return divide_floats(int_to_float((tint_t *)r1), (tfloat_t *)r2);
     } else if (is_float(r1) && is_int(r2)) {
-        return init_float(((tfloat_t *)r1)->v / ((tint_t *)r2)->v);
+        return divide_floats((tfloat_t *)r1, int_to_float((tint_t *)r2));
     }
 
     return init_error("something happened while dividing\n");
@@ -186,7 +226,7 @@ ttype_t *modulo(ttype_t *r1, ttype_t *r2) {
     if (!is_int(r1) || !is_int(r2)) {
         return init_error("applying modulo to one or two non-integers\n");
     } else if (is_int(r1) && is_int(r2)) {
-        return init_int(((tint_t *)r1)->v % ((tint_t *)r2)->v);
+        return modulo_ints((tint_t *)r1, (tint_t *)r2);
     }
 
     return init_error("something happened while dividing\n");
