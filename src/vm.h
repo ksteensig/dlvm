@@ -1,8 +1,9 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "opcodes.h"
 #include "types.h"
 
 /*
@@ -52,15 +53,5 @@ stack_t *stack_init(uint64_t stack_size);
 //heap_t *heap_init(uint64_t heap_size);
 
 //heap_t *heap_obj_init(char *name, uint64_t start, uint64_t end);
-
-void dlvm_exec(dlvm_t *vm);
-
-void dlvm_gc_mark(dlvm_t *vm);
-
-void dlvm_gc_sweep(dlvm_t *vm);
-
-void dlvm_gc_reset_marked(dlvm_t *vm);
-
-void dlvm_gc_mark_and_sweep(dlvm_t *vm);
 
 bool check_and_print_error(dlvm_t *vm);

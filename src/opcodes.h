@@ -24,3 +24,4 @@ typedef enum opcode_e {
     PRINT = 0xFE,
     HALT = 0xFF
 } opcode_t;
+
