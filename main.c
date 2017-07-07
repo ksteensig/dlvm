@@ -1,5 +1,4 @@
-#include "src/vm.h"
-#include "src/interp.h"
+#include "interp.h"
 
 int main(int argc, char* argv[])
 {
