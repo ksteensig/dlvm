@@ -223,6 +223,7 @@ void dlvm_exec(dlvm_t *vm) {
             case PRINT:
                 r1 = dlvm_pop(vm);
                 printf("%ld\n", ((tint_t *)r1)->v);
+                break;
             case HALT:
                 dlvm_gc_run(vm);
                 return;
