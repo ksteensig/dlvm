@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
     stack_t *stack = stack_init(100);
     program_t *program = malloc(sizeof(program_t));
     program->program = prog;
-    program->program_size = 6;
+    program->program_size = 9;
 
     dlvm_t *vm = dlvm_init(program, stack);
 

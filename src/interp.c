@@ -4,6 +4,8 @@ bool check_and_print_error(dlvm_t *vm) {
     ttype_t *typ = vm->stack->stack[vm->sp - 1];
     terror_t *err;
 
+    printf("%d\n", typ->t);
+
     if (typ->t == ERROR) {
         err = (terror_t *)typ;
         printf(err->msg);
@@ -83,6 +85,7 @@ void _PUSH(dlvm_t *vm) {
     switch (type) {
         case BOOL:
             r1 = init_int((bool)dlvm_next_op(vm));
+            break;
         case INT:
             r1 = init_int(dlvm_next_op(vm));
             break;
@@ -98,6 +101,7 @@ void _PUSH(dlvm_t *vm) {
         case FUNCTION:
             // first arg is argc and second arg is addr
             r1 = init_fun(dlvm_next_op(vm), dlvm_next_op(vm));
+            break;
         default:
             return;
     }
@@ -230,10 +234,11 @@ void dlvm_exec(dlvm_t *vm) {
             default:
                 return;
         }
-
+        /*
         if (check_and_print_error(vm)) {
             return;
         }
+        */
 
         if (!(++gc)) {
             dlvm_gc_run(vm);
