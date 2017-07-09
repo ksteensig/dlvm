@@ -137,6 +137,42 @@ void _GLOAD(dlvm_t *vm) {
     }
 }
 
+void _JMP(dlvm_t *vm) {
+    uint64_t addr = dlvm_next_op(vm);
+
+    vm->pc = addr;
+}
+
+void _JMPF(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    uint64_t addr = dlvm_next_op(vm);
+
+    if (r1 == NULL) {
+        return;
+    }
+
+    if (r1->t == BOOL && !((tbool_t *)r1)->v) {
+        vm->pc = addr;
+    } else {
+        
+    }
+}
+
+void _JMPT(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    uint64_t addr = dlvm_next_op(vm);
+
+    if (r1 == NULL) {
+        return;
+    }
+
+    if (r1->t == BOOL && ((tbool_t *)r1)->v) {
+        vm->pc = addr;
+    } else {
+        
+    }
+}
+
 void dlvm_exec(dlvm_t *vm) {
     opcode_t opcode;
     ttype_t *r1, *r2, *res;
@@ -222,7 +258,13 @@ void dlvm_exec(dlvm_t *vm) {
                 dlvm_push(vm, r1); // push result back to stack
                 break;
             case JMP:
-                vm->pc = (uint64_t)dlvm_next_op(vm);
+                _JMP(vm);
+                break;
+            case JMPF:
+                _JMPF(vm);
+                break;
+            case JMPT:
+                _JMPT(vm);
                 break;
             case PRINT:
                 r1 = dlvm_pop(vm);
