@@ -43,7 +43,7 @@ void free_float(ttype_t *r1) {
 }
 
 ttype_t *init_char(char v) {
-    tchar_t *res = malloc(sizeof(tchar_t));
+    tstring_t *res = malloc(sizeof(tstring_t));
     res->v = v;
     res->t = CHAR;
     res->marked = false;
@@ -53,7 +53,7 @@ ttype_t *init_char(char v) {
 }
 
 void free_char(ttype_t *r1) {
-    free((tchar_t *)r1);
+    free((tstring_t *)r1);
 }
 
 ttype_t *init_list() {
@@ -363,7 +363,7 @@ ttype_t *float_equals(tfloat_t *r1, tfloat_t *r2) {
     }
 }
 
-ttype_t *char_equals(tchar_t *r1, tchar_t *r2) {
+ttype_t *char_equals(tstring_t *r1, tstring_t *r2) {
     if (r1->v == r2->v) {
         return init_bool(true);
     } else {
@@ -427,4 +427,50 @@ ttype_t *float_less_than(tfloat_t *r1, tfloat_t *r2) {
 
 ttype_t *float_greater_than(tfloat_t *r1, tfloat_t *r2) {
     return init_bool(r1->v > r2->v);
+}
+
+void print_nil() {
+    printf("NIL");
+}
+
+void print_bool(tbool_t *r1) {
+    printf("%s", r1->v ? "TRUE" : "FALSE");
+}
+
+void print_int(tint_t *r1) {
+    printf("%ld", ((tint_t *)r1)->v);
+}
+
+void print_float(tfloat_t *r1) {
+    printf("%lf", ((tfloat_t *)r1)->v);
+}
+
+void print_char(tstring_t *r1) {
+    
+}
+
+void print_primitive(ttype_t *r1) {
+    switch(r1->t) {
+        case NIL:
+            print_nil();
+            break;
+        case BOOL:
+            print_bool((tbool_t *)r1);
+            break;
+        case CHAR:
+            print_char((tstring_t *)r1);
+            break;
+        case INT:
+            print_int((tint_t *)r1);
+            break;
+        case FLOAT:
+            print_float((tfloat_t *)r1);
+            break;
+        default:
+            return;
+    }
+}
+
+void print_list(tlist_t *r1, tlist_t *known_lists) {
+
 }

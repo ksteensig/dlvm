@@ -11,7 +11,7 @@ typedef enum type_e {
     BOOL        = 1,
     INT         = 2,
     FLOAT       = 3,
-    CHAR        = 4,
+    STRING      = 4,
     LIST        = 5,
     FUNCTION    = 6,
     ERROR       = 0xFF,
@@ -48,13 +48,13 @@ typedef struct tfloat_s {
     double v;
 } tfloat_t;
 
-typedef struct tchar_s {
+typedef struct tstring_s {
     type_t t;
     ttype_t *next;
     bool marked;
 
     char v;
-} tchar_t;
+} tstring_t;
 
 typedef struct tlist_s {
     type_t t;
@@ -161,7 +161,7 @@ ttype_t *grow_list(tlist_t *list);
 ttype_t *bool_equals(tbool_t *r1, tbool_t *r2);
 ttype_t *int_equals(tint_t *r1, tint_t *r2);
 ttype_t *float_equals(tfloat_t *r1, tfloat_t *r2);
-ttype_t *char_equals(tchar_t *r1, tchar_t *r2);
+ttype_t *char_equals(tstring_t *r1, tstring_t *r2);
 
 ttype_t *equals(ttype_t *r1, ttype_t *r2);
 ttype_t *less_than(ttype_t *r1, ttype_t *r2);
@@ -171,3 +171,11 @@ ttype_t *int_less_than(tint_t *r1, tint_t *r2);
 ttype_t *int_greater_than(tint_t *r1, tint_t *r2);
 ttype_t *float_less_than(tfloat_t *r1, tfloat_t *r2);
 ttype_t *float_greater_than(tfloat_t *r1, tfloat_t *r2);
+
+void print_nil();
+void print_bool(tbool_t *r1);
+void print_int(tint_t *r1);
+void print_float(tfloat_t *r1);
+void print_char(tstring_t *r1);
+void print_primitive(ttype_t *r1);
+void print_list(tlist_t *r1, tlist_t *known_lists);
