@@ -338,3 +338,93 @@ ttype_t *grow_list(tlist_t *list) {
 
     return (ttype_t *)l;
 }
+
+ttype_t *bool_equals(tbool_t *r1, tbool_t *r2) {
+    if (r1->v == r2->v) {
+        return init_bool(true);
+    } else {
+        return init_bool(false);
+    }
+}
+
+ttype_t *int_equals(tint_t *r1, tint_t *r2) {
+    if (r1->v == r2->v) {
+        return init_bool(true);
+    } else {
+        return init_bool(false);
+    }
+}
+
+ttype_t *float_equals(tfloat_t *r1, tfloat_t *r2) {
+    if (r1->v == r2->v) {
+        return init_bool(true);
+    } else {
+        return init_bool(false);
+    }
+}
+
+ttype_t *char_equals(tchar_t *r1, tchar_t *r2) {
+    if (r1->v == r2->v) {
+        return init_bool(true);
+    } else {
+        return init_bool(false);
+    }
+}
+
+ttype_t *less_than(ttype_t *r1, ttype_t *r2) {
+    if (is_int(r1) && is_int(r2)) {
+        return int_less_than((tint_t *)r1, (tint_t *)r2);
+    } else if (is_float(r1) && is_float(r2)) {
+        return float_less_than((tfloat_t *)r1, (tfloat_t *)r2);
+    } else if (is_int(r1) && is_float(r2)) {
+        return float_less_than(int_to_float(r1), (tfloat_t *)r2);
+    } else if (is_float(r1) && is_int(r2)) {
+        return float_less_than((tfloat_t *)r1, int_to_float(r2));
+    }
+
+    return init_error("");
+}
+
+ttype_t *greater_than(ttype_t *r1, ttype_t *r2) {
+    if (is_int(r1) && is_int(r2)) {
+        return int_greater_than((tint_t *)r1, (tint_t *)r2);
+    } else if (is_float(r1) && is_float(r2)) {
+        return float_greater_than((tfloat_t *)r1, (tfloat_t *)r2);
+    } else if (is_int(r1) && is_float(r2)) {
+        return float_greater_than(int_to_float(r1), (tfloat_t *)r2);
+    } else if (is_float(r1) && is_int(r2)) {
+        return float_greater_than((tfloat_t *)r1, int_to_float(r2));
+    }
+
+    return init_error("");
+}
+
+ttype_t *equals(ttype_t *r1, ttype_t *r2) {
+    if (is_int(r1) && is_int(r2)) {
+        return int_equals((tint_t *)r1, (tint_t *)r2);
+    } else if (is_float(r1) && is_float(r2)) {
+        return float_equals((tfloat_t *)r1, (tfloat_t *)r2);
+    } else if (is_int(r1) && is_float(r2)) {
+        return float_equals(int_to_float(r1), (tfloat_t *)r2);
+    } else if (is_float(r1) && is_int(r2)) {
+        return float_equals((tfloat_t *)r1, int_to_float(r2));
+    }
+
+    return init_error("");
+}
+
+ttype_t *int_less_than(tint_t *r1, tint_t *r2) {
+    return init_bool(r1->v < r2->v);
+}
+
+ttype_t *int_greater_than(tint_t *r1, tint_t *r2) {
+    return init_bool(r1->v > r2->v);
+}
+
+ttype_t *float_less_than(tfloat_t *r1, tfloat_t *r2) {
+    return init_bool(r1->v < r2->v);
+}
+
+ttype_t *float_greater_than(tfloat_t *r1, tfloat_t *r2) {
+    return init_bool(r1->v > r2->v);
+}

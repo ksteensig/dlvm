@@ -22,7 +22,7 @@ void _POP(dlvm_t *vm);
 void _LOAD(dlvm_t *vm);
 void _GLOAD(dlvm_t *vm);
 
-void _INSER_LIST(dlvm_t *vm);
+void _INSERT_LIST(dlvm_t *vm);
 void _SET_LIST(dlvm_t *vm);
 void _ACCESS_LIST(dlvm_t *vm);
 
@@ -33,3 +33,11 @@ void _RET(dlvm_t *vm);
 void _JMP(dlvm_t *vm);
 void _JMPF(dlvm_t *vm);
 void _JMPT(dlvm_t *vm);
+
+void _CMP_EQ(dlvm_t *vm);
+void _CMP_L(dlvm_t *vm);
+void _CMP_G(dlvm_t *vm);
+void _CMP_LE(dlvm_t *vm);
+void _CMP_GE(dlvm_t *vm);
+
+void _PRINT(dlvm_t *vm);

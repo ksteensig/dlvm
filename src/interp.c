@@ -137,6 +137,52 @@ void _GLOAD(dlvm_t *vm) {
     }
 }
 
+void _INSERT_LIST(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    ttype_t *r2 = dlvm_pop(vm);
+    ttype_t *res = insert_into_list(r1, r2, dlvm_next_op(vm));
+    dlvm_push(vm, res);
+}
+
+void _SET_LIST(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    ttype_t *r2 = dlvm_pop(vm);
+    ttype_t *res = overwrite_list(r1, r2, dlvm_next_op(vm));
+    dlvm_push(vm, res);
+}
+
+void _ACCESS_LIST(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    ttype_t *res = access_list(r1, dlvm_next_op(vm));
+    dlvm_push(vm, res);
+}
+
+void _INVOKE(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    dlvm_push(vm, init_int(((tfun_t *)r1)->argc));
+    dlvm_push(vm, init_int(vm->fp));
+    dlvm_push(vm, init_int(vm->pc));
+    vm->fp = vm->sp;
+    vm->pc = ((tfun_t *)r1)->addr;
+}
+
+void _CALL(dlvm_t *vm) {
+    dlvm_push(vm, init_int(dlvm_next_op(vm))); // push argc to stack
+    dlvm_push(vm, init_int(vm->fp));
+    dlvm_push(vm, init_int(vm->pc));
+    vm->fp = vm->sp;
+    vm->pc = dlvm_next_op(vm); // addr
+}
+
+void _RET(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm); // get result
+    vm->sp = vm->fp;
+    vm->pc = (uint64_t)((tint_t *)dlvm_pop(vm))->v;
+    vm->fp = (uint64_t)((tint_t *)dlvm_pop(vm))->v;
+    vm->sp -= (uint64_t)((tint_t *)dlvm_pop(vm))->v;
+    dlvm_push(vm, r1); // push result back to stack
+}
+
 void _JMP(dlvm_t *vm) {
     uint64_t addr = dlvm_next_op(vm);
 
@@ -173,9 +219,128 @@ void _JMPT(dlvm_t *vm) {
     }
 }
 
+void _CMP_EQ(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    ttype_t *r2 = dlvm_pop(vm);
+
+    if (r1 == NULL || r2 == NULL) {
+        dlvm_push(vm, init_error(""));
+        return;
+    }
+
+    if (is_number(r1) && is_number(r2)) {
+        dlvm_push(vm, equals(r1, r2));
+        return;
+    }
+
+    if (r1->t != r2->t) {
+        dlvm_push(vm, init_error(""));
+        return;
+    }
+
+    switch (r1->t) {
+        case BOOL:
+            dlvm_push(vm, bool_equals((tbool_t *)r1, (tbool_t *)r2));
+            break;
+        case CHAR:
+            dlvm_push(vm, char_equals((tchar_t *)r1, (tchar_t *)r2));
+            break;
+        default:
+            dlvm_push(vm, init_error(""));
+    }
+}
+
+void _CMP_L(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    ttype_t *r2 = dlvm_pop(vm);
+
+    if (r1 == NULL || r2 == NULL) {
+        dlvm_push(vm, init_error(""));
+        return;
+    }
+
+    if (is_number(r1) && is_number(r2)) {
+        dlvm_push(vm, less_than(r1, r2));
+    }
+
+    dlvm_push(vm, init_error(""));
+}
+
+void _CMP_G(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    ttype_t *r2 = dlvm_pop(vm);
+
+    if (r1 == NULL || r2 == NULL) {
+        dlvm_push(vm, init_error(""));
+        return;
+    }
+
+    if (is_number(r1) && is_number(r2)) {
+        dlvm_push(vm, greater_than(r1, r2));
+    }
+
+    dlvm_push(vm, init_error(""));
+}
+
+void _CMP_LE(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    ttype_t *r2 = dlvm_pop(vm);
+
+    if (r1 == NULL || r2 == NULL) {
+        dlvm_push(vm, init_error(""));
+        return;
+    }
+
+    if (is_number(r1) && is_number(r2)) {
+        return dlvm_push(vm, and(equals(r1, r2), less_than(r1, r2)));
+    }
+
+    dlvm_push(vm, init_error(""));
+}
+
+void _CMP_GE(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+    ttype_t *r2 = dlvm_pop(vm);
+
+    if (r1 == NULL || r2 == NULL) {
+        dlvm_push(vm, init_error(""));
+        return;
+    }
+
+    if (is_number(r1) && is_number(r2)) {
+        return dlvm_push(vm, and(equals(r1, r2), greater_than(r1, r2)));
+    }
+
+    dlvm_push(vm, init_error(""));
+}
+
+void _PRINT(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+
+    if (r1 == NULL) {
+        return;
+    }
+
+    switch(r1->t) {
+        case BOOL:
+            printf("%s", ((tbool_t *)r1)->v ? "TRUE" : "FALSE");
+            break;
+        case CHAR:
+            printf("%c", ((tchar_t *)r1)->v);
+            break;
+        case INT:
+            printf("%ld", ((tint_t *)r1)->v);
+            break;
+        case FLOAT:
+            printf("%lf", ((tfloat_t *)r1)->v);
+            break;
+        default:
+            return;
+    }
+}
+
 void dlvm_exec(dlvm_t *vm) {
     opcode_t opcode;
-    ttype_t *r1, *r2, *res;
     uint8_t gc = 0;
 
     while (1) {
@@ -218,44 +383,22 @@ void dlvm_exec(dlvm_t *vm) {
                 _GLOAD(vm);
                 break;
             case INSERT_LIST:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = insert_into_list(r1, r2, dlvm_next_op(vm));
-                dlvm_push(vm, res);
+                _INSERT_LIST(vm);
                 break;
             case SET_LIST:
-                r1 = dlvm_pop(vm);
-                r2 = dlvm_pop(vm);
-                res = overwrite_list(r1, r2, dlvm_next_op(vm));
-                dlvm_push(vm, res);
+                _SET_LIST(vm);
                 break;
             case ACCESS_LIST:
-                r1 = dlvm_pop(vm);
-                res = access_list(r1, dlvm_next_op(vm));
-                dlvm_push(vm, res);
+                _ACCESS_LIST(vm);
                 break;
             case INVOKE: // invoke function object
-                r1 = dlvm_pop(vm);
-                dlvm_push(vm, init_int(((tfun_t *)r1)->argc));
-                dlvm_push(vm, init_int(vm->fp));
-                dlvm_push(vm, init_int(vm->pc));
-                vm->fp = vm->sp;
-                vm->pc = ((tfun_t *)r1)->addr;
+                _INVOKE(vm);
                 break;
             case CALL: // invoke procedure
-                dlvm_push(vm, init_int(dlvm_next_op(vm))); // push argc to stack
-                dlvm_push(vm, init_int(vm->fp));
-                dlvm_push(vm, init_int(vm->pc));
-                vm->fp = vm->sp;
-                vm->pc = dlvm_next_op(vm); // addr
+                _CALL(vm);
                 break;
             case RET:
-                r1 = dlvm_pop(vm); // get result
-                vm->sp = vm->fp;
-                vm->pc = (uint64_t)((tint_t *)dlvm_pop(vm))->v;
-                vm->fp = (uint64_t)((tint_t *)dlvm_pop(vm))->v;
-                vm->sp -= (uint64_t)((tint_t *)dlvm_pop(vm))->v;
-                dlvm_push(vm, r1); // push result back to stack
+                _RET(vm);
                 break;
             case JMP:
                 _JMP(vm);
@@ -266,9 +409,23 @@ void dlvm_exec(dlvm_t *vm) {
             case JMPT:
                 _JMPT(vm);
                 break;
+            case CMP_EQ:
+                _CMP_EQ(vm);
+                break;
+            case CMP_L:
+                _CMP_L(vm);
+                break;
+            case CMP_G:
+                _CMP_G(vm);
+                break;
+            case CMP_LE:
+                _CMP_LE(vm);
+                break;
+            case CMP_GE:
+                _CMP_GE(vm);
+                break;
             case PRINT:
-                r1 = dlvm_pop(vm);
-                printf("%ld\n", ((tint_t *)r1)->v);
+                _PRINT(vm);
                 break;
             case HALT:
                 dlvm_gc_run(vm);

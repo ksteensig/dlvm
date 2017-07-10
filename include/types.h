@@ -157,3 +157,17 @@ ttype_t *access_list(ttype_t *list, uint64_t pos);
 
 // internal api to grow the list as it's implemented as a flex array
 ttype_t *grow_list(tlist_t *list);
+
+ttype_t *bool_equals(tbool_t *r1, tbool_t *r2);
+ttype_t *int_equals(tint_t *r1, tint_t *r2);
+ttype_t *float_equals(tfloat_t *r1, tfloat_t *r2);
+ttype_t *char_equals(tchar_t *r1, tchar_t *r2);
+
+ttype_t *equals(ttype_t *r1, ttype_t *r2);
+ttype_t *less_than(ttype_t *r1, ttype_t *r2);
+ttype_t *greater_than(ttype_t *r1, ttype_t *r2);
+
+ttype_t *int_less_than(tint_t *r1, tint_t *r2);
+ttype_t *int_greater_than(tint_t *r1, tint_t *r2);
+ttype_t *float_less_than(tfloat_t *r1, tfloat_t *r2);
+ttype_t *float_greater_than(tfloat_t *r1, tfloat_t *r2);
