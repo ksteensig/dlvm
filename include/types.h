@@ -14,7 +14,7 @@ typedef enum type_e {
     STRING      = 4,
     LIST        = 5,
     FUNCTION    = 6,
-    ERROR       = 0xFF,
+    EXCEPTION   = 0xFF,
 } type_t;
 
 /* type to convert to */
@@ -29,7 +29,7 @@ typedef struct tbool_s {
     ttype_t *next;
     bool marked;
 
-    bool v;
+    bool b;
 } tbool_t;
 
 typedef struct tint_s {
@@ -53,7 +53,7 @@ typedef struct tstring_s {
     ttype_t *next;
     bool marked;
 
-    char v;
+    utf8_t str;
 } tstring_t;
 
 typedef struct tlist_s {
@@ -62,20 +62,23 @@ typedef struct tlist_s {
     bool marked;
 
     ttype_t **list;
-    uint64_t arr_len;
+    uint64_t length;
     uint64_t elements;
 } tlist_t;
 
+/* procedure type */
 typedef struct tfun_s {
     type_t t;
-    struct ttype_s *next;
+    ttype_t *next;
     bool marked;
 
+	uint64_t call_count;
     uint64_t argc;
     uint64_t addr;
 } tfun_t;
 
-typedef struct terror_s {
+/* exception type */
+typedef struct ex_s {
     type_t t;
     ttype_t *next;
     bool marked;
@@ -87,7 +90,15 @@ typedef struct terror_s {
     uint8_t opcode_range;
     
     char *msg;
-} terror_t;
+} ex_t;
+
+typedef struct ex_handler_s {
+	type_t t;
+	ttype_t *next;
+	bool marked;
+
+	ex_handler_t *prev;
+} ex_handler_t
 
 ttype_t *init_bool(bool v);
 void free_bool(ttype_t *r1);

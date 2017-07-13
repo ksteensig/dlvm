@@ -7,54 +7,34 @@
 #include "types.h"
 #include "opcodes.h"
 
-/*
 typedef struct {
-    char *name;
-    uint64_t start;
-    uint64_t end;
-} heap_obj_t;
-*/
+	/* program bytecode */
+    uint8_t *program;					// program bytecode
+	uint64_t program_size;				// size of program
 
-/*
-typedef struct {
-    uint64_t heap_size;
-    uint64_t *heap;
+	/* stack */
+    ttype_t **stack;					// array of pointers to ttype_t
+	uint64_t stack_size;				// max size of the stack
 
-    uint64_t heap_objs_count;
-    heap_obj_t *heap_objs;
-} heap_t;
-*/
+	tfun_t **function_table;			// table with program functions
+	uint64_t function_table_size;		// size of function table
 
-typedef struct {
-    uint64_t stack_size;
-    ttype_t **stack;
-} stack_t;
+	ex_handler_t *exception_handler;	// last ex handler in a linked list
 
-typedef struct {
-    uint64_t program_size;
-    uint64_t *program;
-} program_t;
-
-typedef struct {
-    program_t *program;
-    stack_t *stack;
-    //heap_t *heap;
-
-    uint64_t pc;
-    uint64_t sp;
-    uint64_t fp;
+	/* registers */
+    uint64_t pc;						// program counter
+    uint64_t sp;						// stack pointer
+    uint64_t fp;						// frame pointer
 } dlvm_t;
 
-dlvm_t *dlvm_init(program_t *p, stack_t *s);
+/* p is program, ps is program_size, ss is stack_size */
+dlvm_t *dlvm_init(uint8_t *p, uint64_t ps, uint64_t ss);
 
-program_t *program_init(char *filename);
+/* vm is the virtual machine, o is the object pushed on the stack */
+void dlvm_push(dlvm_t *vm, ttype_t *o);
 
-stack_t *stack_init(uint64_t stack_size);
-
-//heap_t *heap_init(uint64_t heap_size);
-
-//heap_t *heap_obj_init(char *name, uint64_t start, uint64_t end);
-
-void dlvm_push(dlvm_t *vm, ttype_t *v);
+/* vm is the virtual machine which has an object popped from its stack */
 ttype_t *dlvm_pop(dlvm_t *vm);
-uint64_t dlvm_next_op(dlvm_t *vm);
+
+/* gets next opcode from the program */
+uint8_t dlvm_next_op(dlvm_t *vm);
