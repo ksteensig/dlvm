@@ -1,13 +1,6 @@
 #pragma once
 
-typedef enum header_bytes_e {
-	NOP					= 0x00,
-	ADD_FUNCTION		= 0x01,
-	SET_ENTRYPOINT		= 0x02,
-	END_HEADER			= 0xFF	
-} header_bytes_t;
-
-typedef enum bytecode_e {
+typedef enum opcode_e {
     NOP                 = 0x00,
     ADD                 = 0x01,
     SUB                 = 0x02,
@@ -36,8 +29,6 @@ typedef enum bytecode_e {
     CMP_LE              = 0x19,
     CMP_GE              = 0x1A,
     COPY                = 0x1B,
-	RAISE				= 0x1C,
-	TRY_CATCH			= 0x1D,
     PRINT               = 0xFE,
     HALT                = 0xFF
-} bytecode_t;
+} opcode_t;

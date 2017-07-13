@@ -1,14 +1,10 @@
 #include "vm.h"
 
-dlvm_t *dlvm_init(uint8_t *p, uint64_t ps, uint64_t ss) {
+dlvm_t *dlvm_init(program_t *p, stack_t *s) {
     dlvm_t *vm = malloc(sizeof(dlvm_t));
 
     vm->program = p;
-    vm->program_size = ps;
-
-	/* initializes the stack to the given stack_size */ 
-	vm->stack = malloc(sizeof(ttype_t *) * ss);
-	vm->stack_size = ss;
+    vm->stack = s;
 
     vm->pc = 0;
     vm->sp = 0;
@@ -17,32 +13,53 @@ dlvm_t *dlvm_init(uint8_t *p, uint64_t ps, uint64_t ss) {
     return vm;
 }
 
+program_t *program_init(char *filename) {
+    program_t *prog = malloc(sizeof(program_t));
+
+    return prog;
+}
+
+stack_t *stack_init(uint64_t stack_size) {
+    stack_t *stack = malloc(sizeof(stack_t));
+
+    stack->stack_size = stack_size;
+    stack->stack = malloc(sizeof(ttype_t*) * stack_size);
+
+    return stack;
+}
+
+/*
+heap_t *heap_init(uint64_t heap_size) {
+    heap_t *heap = malloc(sizeof(heap_t));
+
+    heap->heap_size = heap_size;
+    heap->heap = malloc(sizeof(uint64_t) * heap_size);
+
+    heap->heap_objs_count = 0;
+
+    return heap;
+}
+*/
+
 uint64_t dlvm_next_op(dlvm_t *vm) {
     return vm->program->program[vm->pc++];
 }
 
-void dlvm_push(dlvm_t *vm, ttype_t *o) {
-	/* keep track of what last was pushed,
-	 * this is used by the garbage collector
-	 * to build a linked list of objects
-	 */
+void dlvm_push(dlvm_t *vm, ttype_t *v) {
     static ttype_t *last_pushed;
 
     if (last_pushed != NULL) {
-         o->next = last_pushed;
+         v->next = last_pushed;
     }
     
-    last_pushed = o;
+    last_pushed = v;
 
-    vm->stack[vm->sp++] = o;
+    vm->stack->stack[vm->sp++] = v;
 }
 
 ttype_t *dlvm_pop(dlvm_t *vm) {
-	/* pre-decrements the stack pointer, before returning the object */
-    ttype_t *o = vm->stack->stack[--(vm->sp)];
-
-	/* sets the position where the object was on the stack to NULL */
+    ttype_t *ret = vm->stack->stack[--(vm->sp)];
     vm->stack->stack[vm->sp + 1] = NULL;
 
-    return o;
+    return ret;
 }
