@@ -243,7 +243,7 @@ void _CMP_EQ(dlvm_t *vm) {
             dlvm_push(vm, bool_equals((tbool_t *)r1, (tbool_t *)r2));
             break;
         case CHAR:
-            dlvm_push(vm, char_equals((tchar_t *)r1, (tchar_t *)r2));
+            dlvm_push(vm, char_equals((tstring_t *)r1, (tstring_t *)r2));
             break;
         default:
             dlvm_push(vm, init_error(""));
@@ -314,19 +314,30 @@ void _CMP_GE(dlvm_t *vm) {
     dlvm_push(vm, init_error(""));
 }
 
-void _PRINT(dlvm_t *vm) {
-    ttype_t *r1 = dlvm_pop(vm);
+/*
+void print_list(dlvm_t *vm, tlist_t *list, tlist_t *known) {
+    append_list(known, list);
 
-    if (r1 == NULL) {
-        return;
+    for (uint64_t i = 0; i < list->elements; i++) {
+        switch ((list->list[i])->t) {
+            case LIST:
+                if (list->list[i] == list) {
+                    printf(", [...]");
+                }
+        }
     }
+}
 
+void print_primitive(dlvm_t *vm, ttype_t *r1) {
     switch(r1->t) {
+        case NIL:
+            printf("NIL");
+            break;
         case BOOL:
             printf("%s", ((tbool_t *)r1)->v ? "TRUE" : "FALSE");
             break;
         case CHAR:
-            printf("%c", ((tchar_t *)r1)->v);
+            printf("%c", ((tstring_t *)r1)->v);
             break;
         case INT:
             printf("%ld", ((tint_t *)r1)->v);
@@ -337,6 +348,35 @@ void _PRINT(dlvm_t *vm) {
         default:
             return;
     }
+}
+
+void _PRINT_LIST(dlvm_t *vm) {
+    ttype_t *r1 = dlvm_pop(vm);
+
+    if (r1 == NULL) {
+        return;
+    }
+
+    switch(r1->t) {
+        case LIST:
+            print_list(vm, (tlist_t *)r1);
+            break;
+        default:
+            print_primitive(vm, r1, (tlist_t *)init_list());
+    }
+}
+
+void _PRINT_LIST(dlvm_t *vm) {
+
+}
+
+void _PRINT_STRING(dlvm_t *vm) {
+
+}
+*/
+
+void _PRINT(dlvm_t *vm) {
+
 }
 
 void dlvm_exec(dlvm_t *vm) {

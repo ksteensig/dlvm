@@ -28,7 +28,7 @@ typedef enum opcode_e {
     CMP_G               = 0x18,
     CMP_LE              = 0x19,
     CMP_GE              = 0x1A,
+    COPY                = 0x1B,
     PRINT               = 0xFE,
     HALT                = 0xFF
 } opcode_t;
-
