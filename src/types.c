@@ -1,8 +1,8 @@
 #include "types.h"
 
-ttype_t *init_bool(bool v) {
+ttype_t *init_bool(bool b) {
     tbool_t *res = malloc(sizeof(tbool_t));
-    res->v = v;
+    res->b = b;
     res->t = BOOL;
     res->marked = false;
     res->next = NULL;
@@ -42,17 +42,17 @@ void free_float(ttype_t *r1) {
     free((tfloat_t *)r1);
 }
 
-ttype_t *init_char(char v) {
+ttype_t *init_string(utf8_t *s) {
     tstring_t *res = malloc(sizeof(tstring_t));
-    res->v = v;
-    res->t = CHAR;
+    res->str = s;
+    res->t = STRING;
     res->marked = false;
     res->next = NULL;
 
     return (ttype_t *)res;
 }
 
-void free_char(ttype_t *r1) {
+void free_string(ttype_t *o) {
     free((tstring_t *)r1);
 }
 
@@ -80,6 +80,7 @@ ttype_t *init_fun(uint64_t argc, uint64_t addr) {
     fun->marked = false;
     fun->next = NULL;
 
+	fun->calls = 0;
     fun->addr = addr;
     fun->argc = argc;
 
@@ -90,18 +91,20 @@ void free_fun(ttype_t *fun) {
     free((tfun_t *)fun);
 }
 
-ttype_t *init_error(char *msg) {
-    terror_t *err = malloc(sizeof(terror_t));
-    err->t = ERROR;
-    err->marked = false;
-    err->next = NULL;
+ttype_t *init_exception(exception_type_t type, uint16_t error, utf8_t *msg) {
+    terror_t *ex = malloc(sizeof(terror_t));
+    ex->t = EXCEPTION;
+    ex->marked = false;
+    ex->next = NULL;
 
-    err->msg = msg;
+    ex->msg = msg;
+	ex->error_type = type;
+	ex->error_code = error;
 
-    return (ttype_t *)err;
+    return (ttype_t *)ex;
 }
 
-void free_error(ttype_t *err) {
+void free_exception(ttype_t *ex) {
     free(((terror_t *)err)->msg);
     free((terror_t *)err);
 }

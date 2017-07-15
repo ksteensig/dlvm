@@ -1,5 +1,11 @@
 #pragma once
 
+typedef enum header_bytes_e {
+	NOP					= 0x00,
+	ADD_FUNCTION		= 0x01,
+	END_HEADER			= 0xFF
+}
+
 typedef enum opcode_e {
     NOP                 = 0x00,
     ADD                 = 0x01,
