@@ -118,7 +118,7 @@ ttype_t *multiply_ints(tint_t *v1, tint_t *v2);
 ttype_t *divide_ints(tint_t *v1, tint_t *v2);
 ttype_t *modulo_ints(tint_t *v1, tint_t *v2);
 
-tfloat_t *int_to_float(tint_t *v1);
+tfloat_t *int_to_float(tint_t *v);
 
 ttype_t *add_floats(tfloat_t *v1, tfloat_t *v2);
 ttype_t *subtract_floats(tfloat_t *v1, tfloat_t *v2);

@@ -379,13 +379,17 @@ void _PRINT(dlvm_t *vm) {
 
 }
 
+void dlvm_exec_header() {
+	uint8_t bytecode;
+}
+
 void dlvm_exec(dlvm_t *vm) {
-    opcode_t opcode;
+    uint8_t bytecode;
     uint8_t gc = 0;
 
     while (1) {
-        opcode = dlvm_next_op(vm);
-        switch(opcode) {
+        bytecode = dlvm_next_op(vm);
+        switch(bytecode) {
             case ADD:
                 _ADD(vm);
                 break;
