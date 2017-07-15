@@ -91,15 +91,15 @@ void free_fun(ttype_t *fun) {
     free((tfun_t *)fun);
 }
 
-ttype_t *init_exception(exception_type_t type, uint16_t error, utf8_t *msg) {
+ttype_t *init_exception(exception_type_t ex_type, uint64_t err-code, utf8_t *msg) {
     terror_t *ex = malloc(sizeof(terror_t));
     ex->t = EXCEPTION;
     ex->marked = false;
     ex->next = NULL;
 
     ex->msg = msg;
-	ex->error_type = type;
-	ex->error_code = error;
+	ex->error_type = ex_type;
+	ex->error_code = err_code;
 
     return (ttype_t *)ex;
 }

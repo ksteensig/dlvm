@@ -72,7 +72,7 @@ typedef struct tfun_s {
 typedef struct texception_s {
 	TYPE_HEADER;
 	exception_type_t error_type;
-	uint16_t error_code;
+	uint64_t error_code;
     utf8_t *msg;
 } texception_t;
 
@@ -100,7 +100,7 @@ void free_list(ttype_t *o);
 ttype_t *init_fun(uint64_t argc, uint64_t addr);
 void free_fun(ttype_t *o);
 
-ttype_t *init_exception(exception_type_t type, uint16_t error, utf8_t *msg);
+ttype_t *init_exception(exception_type_t ex_type, uint64_t err_code, utf8_t *msg);
 void free_exception(ttype_t *o);
 
 inline bool is_null(ttype_t *o);
@@ -132,7 +132,7 @@ ttype_t *multiply(ttype_t *o1, ttype_t *o2);
 ttype_t *divide(ttype_t *o1, ttype_t *o2);
 ttype_t *modulo(ttype_t *o1, ttype_t *o2);
 
-
+// external boolean logic API that does the typechecking
 ttype_t *and(ttype_t *o1, ttype_t *o2);
 ttype_t *or(ttype_t *o1, ttype_t *o2);
 ttype_t *not(ttype_t *o);
@@ -164,15 +164,18 @@ ttype_t *equals(ttype_t *o1, ttype_t *o2);
 ttype_t *less_than(ttype_t *o1, ttype_t *o2);
 ttype_t *greater_than(ttype_t *o1, ttype_t *o2);
 
-ttype_t *int_less_than(tint_t *o1, tint_t *o2);
-ttype_t *int_greater_than(tint_t *o1, tint_t *o2);
-ttype_t *float_less_than(tfloat_t *o1, tfloat_t *o2);
-ttype_t *float_greater_than(tfloat_t *o1, tfloat_t *o2);
+ttype_t *int_less_than(tint_t *v1, tint_t *v2);
+ttype_t *int_greater_than(tint_t *v1, tint_t *v2);
+ttype_t *float_less_than(tfloat_t *v1, tfloat_t *v2);
+ttype_t *float_greater_than(tfloat_t *v1, tfloat_t *v2);
+
+void print(ttype_t *o);
+
+void print_primitive(ttype_t *o);
 
 void print_nil();
 void print_bool(tbool_t *b);
 void print_int(tint_t *v);
 void print_float(tfloat_t *v);
 void print_string(tstring_t *s);
-void print_primitive(ttype_t *o);
 void print_list(tlist_t *list, tlist_t *known_lists);

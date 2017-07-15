@@ -3,6 +3,7 @@
 typedef enum header_bytes_e {
 	NOP					= 0x00,
 	ADD_FUNCTION		= 0x01,
+	ADD_EXCEPTION		= 0x02,
 	END_HEADER			= 0xFF
 }
 

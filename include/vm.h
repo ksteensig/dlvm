@@ -17,6 +17,9 @@ typedef struct {
 	tfun_t **function_table;
 	function_table_size;
 
+	texception_t *exception_table;
+	uint64_t *exception_table_size;
+
 	texception_handler_t *handler;
 
     uint64_t pc;
@@ -26,6 +29,6 @@ typedef struct {
 
 dlvm_t *dlvm_init(uint8_t *p, uint64_t ps, uint64_t ss);
 
-void dlvm_push(dlvm_t *vm, ttype_t *v);
+void dlvm_push(dlvm_t *vm, ttype_t *o);
 ttype_t *dlvm_pop(dlvm_t *vm);
 uint64_t dlvm_next_op(dlvm_t *vm);

@@ -1,9 +1,10 @@
 project('dlvm', ['c'])
 
+add_global_arguments('-std=c11', language : 'c')
+
 inc = include_directories('include')
 
+#subdir('dlvm-utf8-library')
 subdir('src')
 
-args = ['-std=c11']
-
-executable('dlvm', 'main.c', c_args:args, link_with : dlvmlib, include_directories : inc)
+executable('dlvm', 'main.c', link_with : dlvm, include_directories : inc)
