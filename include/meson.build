@@ -1,1 +1,1 @@
-install_headers('interp.h', 'gc.h', 'opcodes.h', 'types.h', 'vm.h', 'utf8.h')
+install_headers('opcodes.h', 'utf8.h', 'interp.h', 'gc.h', 'types.h', 'vm.h') 

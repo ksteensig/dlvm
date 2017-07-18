@@ -103,16 +103,28 @@ void _NOT(dlvm_t *vm) {
     dlvm_push(vm, res);
 }
 
+ttype_t *parse_int(vm) {
+	int64_t v = dlvm_next_op(vm);
+
+	for (uint8_t i = 0; i < 7; i++) {
+		v = (v << 8);
+		v = v | dlvm_next_op(vm);
+	}
+
+	return (ttype_t *)init_int(v);
+}
+
 void _PUSH(dlvm_t *vm) {
     ttype_t *r1;
-    uint64_t type = dlvm_next_op(vm);
+    uint8_t type = dlvm_next_op(vm);
 
     switch (type) {
         case BOOL:
             r1 = init_int((bool)dlvm_next_op(vm));
             break;
         case INT:
-            r1 = init_int(dlvm_next_op(vm));
+            //r1 = init_int(dlvm_next_op(vm));
+			r1 = parse_int(vm);
             break;
         case FLOAT:
             r1 = init_float((double)dlvm_next_op(vm));
@@ -251,7 +263,7 @@ void _CMP_EQ(dlvm_t *vm) {
     ttype_t *r2 = dlvm_pop(vm);
 
     if (r1 == NULL || r2 == NULL) {
-        dlvm_push(vm, init_error(""));
+        //dlvm_push(vm, init_error(""));
         return;
     }
 
@@ -261,7 +273,7 @@ void _CMP_EQ(dlvm_t *vm) {
     }
 
     if (r1->t != r2->t) {
-        dlvm_push(vm, init_error(""));
+        //dlvm_push(vm, init_error(""));
         return;
     }
 
@@ -273,7 +285,8 @@ void _CMP_EQ(dlvm_t *vm) {
             dlvm_push(vm, string_equals((tstring_t *)r1, (tstring_t *)r2));
             break;
         default:
-            dlvm_push(vm, init_error(""));
+			return;
+            //dlvm_push(vm, init_error(""));
     }
 }
 
@@ -282,7 +295,7 @@ void _CMP_L(dlvm_t *vm) {
     ttype_t *r2 = dlvm_pop(vm);
 
     if (r1 == NULL || r2 == NULL) {
-        dlvm_push(vm, init_error(""));
+        //dlvm_push(vm, init_error(""));
         return;
     }
 
@@ -290,7 +303,7 @@ void _CMP_L(dlvm_t *vm) {
         dlvm_push(vm, less_than(r1, r2));
     }
 
-    dlvm_push(vm, init_error(""));
+    //dlvm_push(vm, init_error(""));
 }
 
 void _CMP_G(dlvm_t *vm) {
@@ -298,7 +311,7 @@ void _CMP_G(dlvm_t *vm) {
     ttype_t *r2 = dlvm_pop(vm);
 
     if (r1 == NULL || r2 == NULL) {
-        dlvm_push(vm, init_error(""));
+        //dlvm_push(vm, init_error(""));
         return;
     }
 
@@ -306,7 +319,7 @@ void _CMP_G(dlvm_t *vm) {
         dlvm_push(vm, greater_than(r1, r2));
     }
 
-    dlvm_push(vm, init_error(""));
+    //dlvm_push(vm, init_error(""));
 }
 
 void _CMP_LE(dlvm_t *vm) {
@@ -314,7 +327,7 @@ void _CMP_LE(dlvm_t *vm) {
     ttype_t *r2 = dlvm_pop(vm);
 
     if (r1 == NULL || r2 == NULL) {
-        dlvm_push(vm, init_error(""));
+        //dlvm_push(vm, init_error(""));
         return;
     }
 
@@ -322,7 +335,7 @@ void _CMP_LE(dlvm_t *vm) {
         return dlvm_push(vm, and(equals(r1, r2), less_than(r1, r2)));
     }
 
-    dlvm_push(vm, init_error(""));
+    //dlvm_push(vm, init_error(""));
 }
 
 void _CMP_GE(dlvm_t *vm) {
@@ -330,7 +343,7 @@ void _CMP_GE(dlvm_t *vm) {
     ttype_t *r2 = dlvm_pop(vm);
 
     if (r1 == NULL || r2 == NULL) {
-        dlvm_push(vm, init_error(""));
+        //dlvm_push(vm, init_error(""));
         return;
     }
 
@@ -338,7 +351,7 @@ void _CMP_GE(dlvm_t *vm) {
         return dlvm_push(vm, and(equals(r1, r2), greater_than(r1, r2)));
     }
 
-    dlvm_push(vm, init_error(""));
+    //dlvm_push(vm, init_error(""));
 }
 
 /*
@@ -420,6 +433,7 @@ void dlvm_exec(dlvm_t *vm) {
 
     while (1) {
         bytecode = dlvm_next_op(vm);
+		printf("bytecode: %d\n", bytecode);
         switch(bytecode) {
             case ADD:
                 _ADD(vm);

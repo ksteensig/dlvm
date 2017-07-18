@@ -28,7 +28,7 @@ void dlvm_gc_sweep(dlvm_t *vm) {
                     free_float(current);
                     break;
                 case STRING:
-                    free_char(current);
+                    free_string(current);
                     break;
                 case LIST:
                     free_list(current);
