@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vm.h"
+#include "types.h"
 
 void dlvm_gc_mark(dlvm_t *vm);
 

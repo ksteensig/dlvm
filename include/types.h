@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "utf8.h"
+#include "exceptions.h"
+
 #define TYPE_HEADER	type_t t; type_t *next; bool marked;
 
 typedef enum type_e {
@@ -16,24 +19,13 @@ typedef enum type_e {
     STRING      = 4,
     LIST        = 5,
     FUNCTION    = 6,
-    ERROR       = 0xFF,
+    EXCEPTION   = 0xFF,
 } type_t;
-
-typedef enum exception_type_e {
-	IO				0x00,
-	MEMORY			0x01,
-	ARITHMETIC		0x02,
-	INSTRUCTION		0x03,
-	TYPE			0x04,
-	INVALID_DATA	0x05,
-	RUNTIME			0x06,
-	CUSTOM			0xFF
-} exception_type_t;
 
 /* type to convert to */
 typedef struct theader_s {
 	TYPE_HEADER
-} theader_t;
+} ttype_t;
 
 typedef struct tbool_s {
 	TYPE_HEADER;
@@ -64,6 +56,7 @@ typedef struct tlist_s {
 
 typedef struct tfun_s {
 	TYPE_HEADER;
+	utf8_t *name;
 	uint64_t calls;
     uint64_t argc;
     uint64_t addr;
@@ -78,7 +71,7 @@ typedef struct texception_s {
 
 typedef struct texception_handler_s {
 	TYPE_HEADER;
-	texception_handler_t *prev;
+	struct texception_handler_s *prev;
 	tfun_t *handler;
 } texception_handler_t;
 

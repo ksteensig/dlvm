@@ -1,4 +1,5 @@
 #include "interp.h"
+#include "opcodes.h"
 
 int main(int argc, char* argv[])
 {
@@ -7,17 +8,12 @@ int main(int argc, char* argv[])
         PUSH, INT, 2,
         MUL,
         PRINT,
-        PUSH, CHAR, '\n',
+        PUSH, STRING, '\n',
         PRINT,
         HALT
     };
 
-    stack_t *stack = stack_init(100);
-    program_t *program = malloc(sizeof(program_t));
-    program->program = prog;
-    program->program_size = 9;
-
-    dlvm_t *vm = dlvm_init(program, stack);
+    dlvm_t *vm = dlvm_init(prog, 9, 100);
 
     dlvm_exec(vm);
 

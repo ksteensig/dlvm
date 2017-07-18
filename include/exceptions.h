@@ -13,19 +13,15 @@ typedef enum exception_type_e {
 enum IO_exception {
 	INPUT			= 0x00,
 	OUTPUT			= 0x01
-}
+};
 
 enum MEMORY_exception {
 	OUT_OF_BOUND	= 0x00,
 	NULL_EXCEPTION	= 0x01,
 	OUT_OF_MEMORY	= 0x02
-}
+};
 
 enum ARITHMETIC_exception {
 	ZERO_DIVISION	= 0x00,
 	FLOATING_ERROR	= 0x01
-}
-
-enum DATA_exception {
-	
-}
+};

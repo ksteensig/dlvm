@@ -53,7 +53,7 @@ ttype_t *init_string(utf8_t *s) {
 }
 
 void free_string(ttype_t *o) {
-    free((tstring_t *)r1);
+    free((tstring_t *)o);
 }
 
 ttype_t *init_list() {
@@ -91,22 +91,22 @@ void free_fun(ttype_t *fun) {
     free((tfun_t *)fun);
 }
 
-ttype_t *init_exception(exception_type_t ex_type, uint64_t err-code, utf8_t *msg) {
-    terror_t *ex = malloc(sizeof(terror_t));
+ttype_t *init_exception(exception_type_t ex_type, uint64_t err_code, utf8_t *msg) {
+    texception_t *ex = malloc(sizeof(texception_t));
     ex->t = EXCEPTION;
     ex->marked = false;
     ex->next = NULL;
 
-    ex->msg = msg;
 	ex->error_type = ex_type;
 	ex->error_code = err_code;
+    ex->msg = msg;
 
     return (ttype_t *)ex;
 }
 
 void free_exception(ttype_t *ex) {
-    free(((terror_t *)err)->msg);
-    free((terror_t *)err);
+    free(((texception_t *)ex)->msg);
+    free((texception_t *)ex);
 }
 
 bool is_float(ttype_t *r) {
@@ -243,7 +243,7 @@ ttype_t *and(ttype_t *r1, ttype_t *r2) {
     if (!is_bool(r1) || !is_bool(r2)) {
         return NULL;
     } else {
-        return init_bool(((tbool_t *)r1)->v && ((tbool_t *)r2)->v);
+        return init_bool(((tbool_t *)r1)->b && ((tbool_t *)r2)->b);
     }
 }
 
@@ -251,7 +251,7 @@ ttype_t *or(ttype_t *r1, ttype_t *r2) {
     if (!is_bool(r1) || !is_bool(r2)) {
         return NULL;
     } else {
-        return init_bool(((tbool_t *)r1)->v || ((tbool_t *)r2)->v);
+        return init_bool(((tbool_t *)r1)->b || ((tbool_t *)r2)->b);
     }
 }
 
@@ -259,7 +259,7 @@ ttype_t *not(ttype_t *r) {
     if (!is_bool(r)) {
         return NULL;
     } else {
-        return init_bool(!((tbool_t *)r)->v);
+        return init_bool(!((tbool_t *)r)->b);
     }
 }
 
@@ -283,7 +283,7 @@ ttype_t *insert_into_list(ttype_t *list, ttype_t *obj, uint64_t pos) {
         ttype_t *res = grow_list(l);
 
         switch (res->t) {
-            case ERROR:
+            case EXCEPTION:
                 return res;
             default:
                 l = (tlist_t *)res;
@@ -343,7 +343,7 @@ ttype_t *grow_list(tlist_t *list) {
 }
 
 ttype_t *bool_equals(tbool_t *r1, tbool_t *r2) {
-    if (r1->v == r2->v) {
+    if (r1->b == r2->b) {
         return init_bool(true);
     } else {
         return init_bool(false);
@@ -365,15 +365,15 @@ ttype_t *float_equals(tfloat_t *r1, tfloat_t *r2) {
         return init_bool(false);
     }
 }
-
-ttype_t *char_equals(tstring_t *r1, tstring_t *r2) {
-    if (r1->v == r2->v) {
+/*
+ttype_t *string_equals(tstring_t *r1, tstring_t *r2) {
+    if (r1->s == r2->s) {
         return init_bool(true);
     } else {
         return init_bool(false);
     }
 }
-
+*/
 ttype_t *less_than(ttype_t *r1, ttype_t *r2) {
     if (is_int(r1) && is_int(r2)) {
         return int_less_than((tint_t *)r1, (tint_t *)r2);
@@ -437,11 +437,11 @@ void print_nil() {
 }
 
 void print_bool(tbool_t *r1) {
-    printf("%s", r1->v ? "TRUE" : "FALSE");
+    printf("%s", r1->b ? "TRUE" : "FALSE");
 }
 
 void print_int(tint_t *r1) {
-    printf("%ld", ((tint_t *)r1)->v);
+    printf("%lld", ((tint_t *)r1)->v);
 }
 
 void print_float(tfloat_t *r1) {
@@ -460,8 +460,8 @@ void print_primitive(ttype_t *r1) {
         case BOOL:
             print_bool((tbool_t *)r1);
             break;
-        case CHAR:
-            print_char((tstring_t *)r1);
+        case STRING:
+            print_string((tstring_t *)r1);
             break;
         case INT:
             print_int((tint_t *)r1);

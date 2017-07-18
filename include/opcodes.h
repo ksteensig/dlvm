@@ -1,11 +1,11 @@
 #pragma once
 
-typedef enum header_bytes_e {
-	NOP					= 0x00,
-	ADD_FUNCTION		= 0x01,
-	ADD_EXCEPTION		= 0x02,
+typedef enum header_e {
+	MODULE_NAME			= 0x00,
+	IMPORT_MODULE		= 0x01,
+	DECL_FUNCTION		= 0x02,
 	END_HEADER			= 0xFF
-}
+} header_t;
 
 typedef enum opcode_e {
     NOP                 = 0x00,

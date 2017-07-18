@@ -259,32 +259,32 @@ uchar_t utf8_access(utf8_t *ustr, uint64_t char_pos) {
     uint64_t byte_iterator = 0;
     uint64_t uchar_length = get_byte_length(str, min(4, ustr->utf8.bytes));
 
-    if (uchar_pos > ustr->utf8.chars) {
+    if (char_pos > ustr->utf8.chars) {
         ustr->is_error = true;
         ustr->error.err_code = OUT_OF_BOUND_ERROR;
 		return c;
 
-    } else if (ustr->utf8.cache.length != 0 && uchar == ustr->utf8.cache.char_pos) {
-        return get_char(str + ustr->utf8.cache.byte_position, ustr->utf8.cache.length);
+    } else if (ustr->utf8.cache.length != 0 && char_pos == ustr->utf8.cache.char_pos) {
+        return get_char(str + ustr->utf8.cache.byte_pos, ustr->utf8.cache.length);
 
     } else if (ustr->utf8.cache.length != 0 && char_pos < ustr->utf8.cache.char_pos) {
-        uchar_iterator = ustr->utf8.cache.uchar;
-        byte_iterator = ustr->utf8.cache.position;
+        uchar_iterator = ustr->utf8.cache.char_pos;
+        byte_iterator = ustr->utf8.cache.byte_pos;
         uchar_length = ustr->utf8.cache.length;
     }
 
-    for ( ; uchar_iterator <= char_pos; uchar_iterator++, byte_position += uchar_length) {
+    for ( ; uchar_iterator <= char_pos; uchar_iterator++, byte_iterator += uchar_length) {
         if (uchar_iterator == char_pos) {
             c = get_char(str + byte_iterator, min(4, ustr->utf8.bytes - byte_iterator));
-            ustr->utf8.cache.uchar = uchar_iterator;
+            ustr->utf8.cache.char_pos = uchar_iterator;
             ustr->utf8.cache.length = c.length;
-            ustr->utf8.cache.position = byte_iterator;
+            ustr->utf8.cache.byte_pos = byte_iterator;
             return c;
         } else {
-            length = get_byte_length(str + byte_iterator, min(4, ustr->utf8.bytes - byte_iterator));
+            uchar_length = get_byte_length(str + byte_iterator, min(4, ustr->utf8.bytes - byte_iterator));
         }
 
-        if (length == 0) {
+        if (uchar_length == 0) {
                 c.is_error = true;
                 c.error.err_code = INVALID_UTF8;
         }

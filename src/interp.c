@@ -1,7 +1,31 @@
 #include "interp.h"
 
+uint8_t dlvm_next_op(dlvm_t *vm) {
+    return vm->program[vm->pc++];
+}
+
+void dlvm_push(dlvm_t *vm, ttype_t *o) {
+    static ttype_t *last_pushed;
+
+    if (last_pushed != NULL) {
+         o->next = last_pushed;
+    }
+    
+    last_pushed = o;
+
+    vm->stack[vm->sp++] = o;
+}
+
+ttype_t *dlvm_pop(dlvm_t *vm) {
+    ttype_t *ret = vm->stack[--(vm->sp)];
+    vm->stack[vm->sp + 1] = NULL;
+
+    return ret;
+}
+
+/*
 bool check_and_print_error(dlvm_t *vm) {
-    ttype_t *typ = vm->stack->stack[vm->sp - 1];
+    ttype_t *typ = vm->stack[vm->sp - 1];
     terror_t *err;
 
     printf("%d\n", typ->t);
@@ -14,6 +38,7 @@ bool check_and_print_error(dlvm_t *vm) {
 
     return false;
 }
+*/
 
 void _ADD(dlvm_t *vm) {
     ttype_t *r1, *r2, *res;
@@ -92,9 +117,11 @@ void _PUSH(dlvm_t *vm) {
         case FLOAT:
             r1 = init_float((double)dlvm_next_op(vm));
             break;
-        case CHAR:
+/*
+        case STRING:
             r1 = init_char((char)dlvm_next_op(vm));
             break;
+*/
         case LIST:
             r1 = init_list();
             break;
@@ -119,7 +146,7 @@ void _LOAD(dlvm_t *vm) {
 
     if (r1->t == INT) {
         offset = (tint_t *)r1;
-        dlvm_push(vm, vm->stack->stack[vm->fp - (uint64_t)offset->v]);
+        dlvm_push(vm, vm->stack[vm->fp - (uint64_t)offset->v]);
     } else {
         
     }
@@ -131,7 +158,7 @@ void _GLOAD(dlvm_t *vm) {
 
     if (r1->t == INT) {
         addr = (tint_t *)r1;
-        dlvm_push(vm, vm->stack->stack[(uint64_t)addr->v]);
+        dlvm_push(vm, vm->stack[(uint64_t)addr->v]);
     } else {
         
     }
@@ -197,7 +224,7 @@ void _JMPF(dlvm_t *vm) {
         return;
     }
 
-    if (r1->t == BOOL && !((tbool_t *)r1)->v) {
+    if (r1->t == BOOL && !((tbool_t *)r1)->b) {
         vm->pc = addr;
     } else {
         
@@ -212,7 +239,7 @@ void _JMPT(dlvm_t *vm) {
         return;
     }
 
-    if (r1->t == BOOL && ((tbool_t *)r1)->v) {
+    if (r1->t == BOOL && ((tbool_t *)r1)->b) {
         vm->pc = addr;
     } else {
         
@@ -242,8 +269,8 @@ void _CMP_EQ(dlvm_t *vm) {
         case BOOL:
             dlvm_push(vm, bool_equals((tbool_t *)r1, (tbool_t *)r2));
             break;
-        case CHAR:
-            dlvm_push(vm, char_equals((tstring_t *)r1, (tstring_t *)r2));
+        case STRING:
+            dlvm_push(vm, string_equals((tstring_t *)r1, (tstring_t *)r2));
             break;
         default:
             dlvm_push(vm, init_error(""));
@@ -381,6 +408,10 @@ void _PRINT(dlvm_t *vm) {
 
 void dlvm_exec_header() {
 	uint8_t bytecode;
+}
+
+void dlvm_parse_header(dlvm_module_t *module) {
+
 }
 
 void dlvm_exec(dlvm_t *vm) {
