@@ -6,12 +6,11 @@
 #include "utf8.h"
 #include "types.h"
 
-void dlvm_parse_header(dlvm_module_t *module);
 void dlvm_exec(dlvm_t *vm);
 
-void dlvm_push(dlvm_t *vm, ttype_t *o);
-ttype_t *dlvm_pop(dlvm_t *vm);
-uint8_t dlvm_next_op(dlvm_t *vm);
+
+
+
 
 bool check_and_print_error(dlvm_t *vm);
 

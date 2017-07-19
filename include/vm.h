@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "types.h"
 #include "utf8.h"
@@ -37,3 +38,11 @@ void dlvm_module_free(dlvm_module_t *module);
 
 dlvm_t *dlvm_init(uint8_t *p, uint64_t ps, uint64_t ss);
 void dlvm_free(dlvm_t *vm);
+
+void dlvm_push(dlvm_t *vm, ttype_t *o);
+ttype_t *dlvm_pop(dlvm_t *vm);
+uint8_t dlvm_next_op(dlvm_t *vm);
+
+uint64_t dlvm_take_8bytes(dlvm_t *vm);
+
+void dlvm_parse_header(dlvm_module_t *module);

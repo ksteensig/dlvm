@@ -9,8 +9,6 @@
 #include "utf8.h"
 #include "exceptions.h"
 
-#define TYPE_HEADER	type_t t; type_t *next; bool marked;
-
 typedef enum type_e {
     NIL         = 0,
     BOOL        = 1,
@@ -23,9 +21,13 @@ typedef enum type_e {
 } type_t;
 
 /* type to convert to */
-typedef struct theader_s {
-	TYPE_HEADER
+typedef struct ttype_s {
+	type_t t;
+	struct ttype_s *next;
+	bool marked;
 } ttype_t;
+
+#define TYPE_HEADER	type_t t; ttype_t *next; bool marked;
 
 typedef struct tbool_s {
 	TYPE_HEADER;
@@ -96,14 +98,14 @@ void free_fun(ttype_t *o);
 ttype_t *init_exception(exception_type_t ex_type, uint64_t err_code, utf8_t *msg);
 void free_exception(ttype_t *o);
 
-inline bool is_null(ttype_t *o);
-inline bool is_char(ttype_t *o);
-inline bool is_number(ttype_t *o);
-inline bool is_float(ttype_t *o);
-inline bool is_int(ttype_t *o);
-inline bool is_list(ttype_t *o);
-inline bool is_function(ttype_t *o);
-inline bool is_exception(ttype_t *o);
+bool is_null(ttype_t *o);
+bool is_char(ttype_t *o);
+bool is_number(ttype_t *o);
+bool is_float(ttype_t *o);
+bool is_int(ttype_t *o);
+bool is_list(ttype_t *o);
+bool is_function(ttype_t *o);
+bool is_exception(ttype_t *o);
 
 ttype_t *add_ints(tint_t *v1, tint_t *v2);
 ttype_t *subtract_ints(tint_t *v1, tint_t *v2);
@@ -111,7 +113,7 @@ ttype_t *multiply_ints(tint_t *v1, tint_t *v2);
 ttype_t *divide_ints(tint_t *v1, tint_t *v2);
 ttype_t *modulo_ints(tint_t *v1, tint_t *v2);
 
-tfloat_t *int_to_float(tint_t *v);
+tfloat_t *int_to_float(ttype_t*v);
 
 ttype_t *add_floats(tfloat_t *v1, tfloat_t *v2);
 ttype_t *subtract_floats(tfloat_t *v1, tfloat_t *v2);

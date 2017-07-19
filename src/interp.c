@@ -1,28 +1,5 @@
 #include "interp.h"
 
-uint8_t dlvm_next_op(dlvm_t *vm) {
-    return vm->program[vm->pc++];
-}
-
-void dlvm_push(dlvm_t *vm, ttype_t *o) {
-    static ttype_t *last_pushed;
-
-    if (last_pushed != NULL) {
-         o->next = last_pushed;
-    }
-    
-    last_pushed = o;
-
-    vm->stack[vm->sp++] = o;
-}
-
-ttype_t *dlvm_pop(dlvm_t *vm) {
-    ttype_t *ret = vm->stack[--(vm->sp)];
-    vm->stack[vm->sp + 1] = NULL;
-
-    return ret;
-}
-
 /*
 bool check_and_print_error(dlvm_t *vm) {
     ttype_t *typ = vm->stack[vm->sp - 1];
@@ -103,15 +80,42 @@ void _NOT(dlvm_t *vm) {
     dlvm_push(vm, res);
 }
 
-ttype_t *parse_int(vm) {
-	int64_t v = dlvm_next_op(vm);
+ttype_t *parse_bool(dlvm_t *vm) {
+	return (ttype_t *)init_bool((bool)dlvm_next_op(vm));
+}
 
-	for (uint8_t i = 0; i < 7; i++) {
-		v = (v << 8);
-		v = v | dlvm_next_op(vm);
-	}
+ttype_t *parse_int(dlvm_t *vm) {
+	int64_t v = dlvm_take_8bytes(vm);
 
 	return (ttype_t *)init_int(v);
+}
+
+ttype_t *parse_float(dlvm_t *vm) {
+	typedef union wrap {
+		uint64_t i;
+		double f;
+	} num_wrap;
+
+	num_wrap v;
+
+	v.i = dlvm_take_8bytes(vm);
+
+	return (ttype_t *)init_float(v.f);
+}
+
+ttype_t *parse_utf8(dlvm_t *vm) {
+	uint8_t *start = vm->program + vm->pc;
+	uint64_t length = vm->program_size - vm->pc;
+	utf8_t *s = convert_to_utf8(start, length);
+
+	return init_string(s);
+}
+
+ttype_t *parse_fun(dlvm_t *vm) {
+	uint64_t argc = dlvm_take_8bytes(vm);
+	uint64_t addr = dlvm_take_8bytes(vm);
+	
+	return init_fun(argc, addr);
 }
 
 void _PUSH(dlvm_t *vm) {
@@ -120,26 +124,22 @@ void _PUSH(dlvm_t *vm) {
 
     switch (type) {
         case BOOL:
-            r1 = init_int((bool)dlvm_next_op(vm));
+            r1 = parse_bool(vm);
             break;
         case INT:
-            //r1 = init_int(dlvm_next_op(vm));
 			r1 = parse_int(vm);
             break;
         case FLOAT:
-            r1 = init_float((double)dlvm_next_op(vm));
+            r1 = parse_float(vm);
             break;
-/*
         case STRING:
-            r1 = init_char((char)dlvm_next_op(vm));
+            r1 = parse_utf8(vm);
             break;
-*/
         case LIST:
             r1 = init_list();
             break;
         case FUNCTION:
-            // first arg is argc and second arg is addr
-            r1 = init_fun(dlvm_next_op(vm), dlvm_next_op(vm));
+            r1 = parse_fun(vm);
             break;
         default:
             return;
@@ -416,14 +416,6 @@ void _PRINT_STRING(dlvm_t *vm) {
 */
 
 void _PRINT(dlvm_t *vm) {
-
-}
-
-void dlvm_exec_header() {
-	uint8_t bytecode;
-}
-
-void dlvm_parse_header(dlvm_module_t *module) {
 
 }
 
