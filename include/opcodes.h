@@ -2,8 +2,8 @@
 
 typedef enum header_e {
 	MODULE_NAME			= 0x00,
-	IMPORT_MODULE		= 0x01,
-	DECL_FUNCTION		= 0x02,
+	IMPORT_MODULES		= 0x01,
+	DECLARE_FUNCTIONS	= 0x02,
 	END_HEADER			= 0xFF
 } header_t;
 

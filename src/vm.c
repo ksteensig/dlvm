@@ -1,6 +1,28 @@
 #include "vm.h"
 
 void dlvm_parse_header(dlvm_module_t *module) {
+	uint64_t file_size;
+	uint8_t header_size;
+
+	FILE *mf = fopen(module->path->utf8.str, "rb");
+
+	fseek(mf, 0L, SEEK_END);
+	file_size = ftell(mf);
+	rewind(mf);
+
+	if (file_size < 8) {
+		return;
+	}
+
+	uint8_t temp_file_size[8];
+	fread(temp_file_size, sizeof(uint8_t), 8, mf);
+	
+	//file_size = (uint64_t) temp_
+/*
+	for (uint8_t i = 0; i < 7; i++) {
+
+	}
+*/
 }
 
 dlvm_module_t *dlvm_module_init(uint8_t *path) {
@@ -32,17 +54,6 @@ uint8_t dlvm_next_op(dlvm_t *vm) {
     return vm->program[vm->pc++];
 }
 
-uint64_t dlvm_take_8bytes(dlvm_t *vm) {
-	uint64_t v = dlvm_next_op(vm);
-
-	for (uint8_t i = 0; i < 7; i++) {
-		v = v << 8;
-		v = v | dlvm_next_op(vm);
-	}
-
-	return v;
-}
-
 void dlvm_push(dlvm_t *vm, ttype_t *o) {
     static ttype_t *last_pushed;
 
@@ -60,4 +71,15 @@ ttype_t *dlvm_pop(dlvm_t *vm) {
     vm->stack[vm->sp + 1] = NULL;
 
     return ret;
+}
+
+uint64_t dlvm_take_8bytes(dlvm_t *vm) {
+	uint64_t v = dlvm_next_op(vm);
+
+	for (uint8_t i = 0; i < 7; i++) {
+		v = v << 8;
+		v = v | dlvm_next_op(vm);
+	}
+
+	return v;
 }

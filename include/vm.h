@@ -11,6 +11,7 @@
 typedef struct dlvm_module_s {
 	utf8_t *path;
 	utf8_t *name;
+	uint64_t module_size;
 	tfun_t **function_table;
 	uint64_t table_size;
 	uint64_t program_start;
@@ -23,6 +24,7 @@ typedef struct dlvm_s {
 	ttype_t **stack;
 	uint64_t stack_size;
 
+	dlvm_module_t *main;
 	dlvm_module_t *module_table;
 	uint64_t module_table_size;
 
