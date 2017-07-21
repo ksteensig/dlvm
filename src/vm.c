@@ -1,8 +1,8 @@
 #include "vm.h"
 
 void dlvm_parse_header(dlvm_module_t *module) {
-	uint64_t file_size;
-	uint8_t header_size;
+	uint64_t file_size = 0;
+	uint8_t header_size = 0;
 
 	FILE *mf = fopen(module->path->utf8.str, "rb");
 
@@ -14,20 +14,26 @@ void dlvm_parse_header(dlvm_module_t *module) {
 		return;
 	}
 
-	uint8_t temp_file_size[8];
-	fread(temp_file_size, sizeof(uint8_t), 8, mf);
-	
-	//file_size = (uint64_t) temp_
-/*
-	for (uint8_t i = 0; i < 7; i++) {
+	module->module_size = file_size;
 
+	uint8_t temp_header_size[8];
+	fread(temp_header_size, sizeof(uint8_t), 8, mf);
+	
+	header_size = file_size | temp_file_size[0];
+
+	for (uint8_t i = 1; i < 8; i++) {
+		header_size = file_size << 8;
+		header_size = file_size | temp_file_size[i];
 	}
-*/
+
+	
 }
 
 dlvm_module_t *dlvm_module_init(uint8_t *path) {
 	dlvm_module_t *module = malloc(sizeof(dlvm_module_t));
 	module->path = convert_to_utf8(path, strlen(path) + 1);
+
+	dlvm_parse_header(module);
 
 	return module;	
 }
