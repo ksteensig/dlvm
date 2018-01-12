@@ -5,4 +5,30 @@ namespace dlvm {
 using namespace std;
 using namespace dlvm;
 
+void VM::Execute() {
+    
+    auto op = Next();
+    
+    while (true) {
+        switch (op) {
+            case NOP:
+                break;
+            case POP:
+                break;
+            case PUSH_INT:
+                PUSH_INT_HANDLER();
+                break;
+            case PRINT:
+                PRINT_HANDLER();
+                break;
+            case HALT:
+                return;
+            default:
+                return;
+        }
+
+        op = Next();
+    }
+}
+
 }
