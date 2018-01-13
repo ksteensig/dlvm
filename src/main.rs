@@ -2,13 +2,13 @@ pub mod ttype;
 pub mod vm;
 pub mod opcode;
 pub mod interp;
+pub mod vm_handler;
 
 use opcode::opcode::*;
 use vm::vm::*;
-use ttype::ttype::*;
 
 fn main() {
-    let program: &Vec<u8> = &vec![
+    let program: Vec<u8> = vec![
         PUSH_INT,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05,
         PUSH_INT,
@@ -17,7 +17,7 @@ fn main() {
         HALT
     ];
     
-    VM::run(&program);
+    VM::run(program);
 
     println!("Hello, world!");
 }

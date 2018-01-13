@@ -3,10 +3,27 @@ pub mod opcode {
     pub const POP: u8  = 0x01;
     pub const PUSH_INT: u8 = 0x02;
     pub const PUSH_FLOAT: u8 = 0x03;
+    pub const PUSH_LIST: u8 = 0x04;
+    pub const PUSH_STRING: u8 = 0x05;
+    pub const PUSH_BOOL: u8 = 0x06;
     pub const ADD: u8 = 0x10;
     pub const SUB: u8 = 0x11;
     pub const MUL: u8 = 0x12;
     pub const DIV: u8 = 0x13;
+    pub const MOD: u8 = 0x14;
+    pub const AND: u8 = 0x15;
+    pub const OR: u8 = 0x16;
+    pub const NOT: u8 = 0x17;
+    pub const LT: u8 = 0x18;
+    pub const EQ: u8 = 0x19;
+    pub const GT: u8 = 0x1A;
+    pub const LIST_INSERT: u8 = 0x20;
+    pub const LIST_APPEND: u8 = 0x21;
+    pub const LIST_PREPEND: u8 = 0x22;
+    pub const LIST_REMOVE: u8 = 0x23;
+    pub const LIST_SET: u8 = 0x24;
+    pub const CALL: u8 = 0x30;
+    pub const RET: u8 = 0x31;
     pub const PRINT: u8 = 0xFE;
     pub const HALT: u8 = 0xFF;
 }

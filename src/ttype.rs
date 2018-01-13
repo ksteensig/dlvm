@@ -1,29 +1,26 @@
 pub mod ttype {
-    use std::ops::Add;
-    use std::ops::Sub;
-    use std::ops::Mul;
-    use std::ops::Div;
+    use std::ops::*;
 
     #[derive(Debug)]
-    pub enum Error<'a> {
+    pub enum Error {
         Error,
-        ErrorDescription(&'a String)
+        ErrorDescription(String)
     }
 
     #[derive(Debug)]
-    pub enum Type<'a> {
-        TInteger     (i64),
+    pub enum Type {
+        TInteger(i64),
         TFloat(f64 ),
         TBool(bool),
-        TString(&'a mut String),
-        TList(&'a mut Vec<Type<'a>>),
-        TError(Error<'a>)
+        TString(String),
+        TList(Vec<Type>),
+        TError(Error)
     }
 
-    impl<'a> Add for Type<'a> {
-        type Output = Type<'a>;
+    impl<'a> Add for Type {
+        type Output = Type;
 
-        fn add(self, other: Type<'a>) -> Type<'a> {
+        fn add(self, other: Type) -> Type {
             match (self, other) {
                 (Type::TInteger(v1), Type::TInteger(v2))    => Type::TInteger(v1 + v2),
                 (Type::TFloat(v1), Type::TFloat(v2))        => Type::TFloat(v1 + v2),
@@ -34,10 +31,10 @@ pub mod ttype {
         }
     }
 
-    impl<'a> Sub for Type<'a> {
-        type Output = Type<'a>;
+    impl<'a> Sub for Type {
+        type Output = Type;
 
-        fn sub(self, other: Type<'a>) -> Type<'a> {
+        fn sub(self, other: Type) -> Type {
             match (self, other) {
                 (Type::TInteger(v1), Type::TInteger(v2))    => Type::TInteger(v1 + v2),
                 (Type::TFloat(v1), Type::TFloat(v2))        => Type::TFloat(v1 + v2),
@@ -48,10 +45,10 @@ pub mod ttype {
         }
     }
 
-    impl<'a> Mul for Type<'a> {
-        type Output = Type<'a>;
+    impl<'a> Mul for Type {
+        type Output = Type;
 
-        fn mul(self, other: Type<'a>) -> Type<'a> {
+        fn mul(self, other: Type) -> Type {
             match (self, other) {
                 (Type::TInteger(v1), Type::TInteger(v2))    => Type::TInteger(v1 + v2),
                 (Type::TFloat(v1), Type::TFloat(v2))        => Type::TFloat(v1 + v2),
@@ -62,16 +59,46 @@ pub mod ttype {
         }
     }
 
-    impl<'a> Div for Type<'a> {
-        type Output = Type<'a>;
+    impl<'a> Div for Type {
+        type Output = Type;
 
-        fn div(self, other: Type<'a>) -> Type<'a> {
+        fn div(self, other: Type) -> Type {
             match (self, other) {
                 (Type::TInteger(v1), Type::TInteger(v2))    => Type::TInteger(v1 + v2),
                 (Type::TFloat(v1), Type::TFloat(v2))        => Type::TFloat(v1 + v2),
                 (Type::TInteger(v1), Type::TFloat(v2))      => Type::TFloat((v1 as f64) + v2),
                 (Type::TFloat(v1), Type::TInteger(v2))      => Type::TFloat(v1 + (v2 as f64)),
                 _                                           => Type::TError(Error::Error)
+            }
+        }
+    }
+
+    impl<'a> BitAnd for Type {
+        type Output = Type;
+        fn bitand(self, other: Type) -> Type {
+            match(self, other) {
+                (Type::TBool(b1), Type::TBool(b2))  => Type::TBool(b1 & b2), 
+                _                       => Type::TError(Error::Error)
+            }
+        }
+    }
+
+    impl<'a> BitOr for Type {
+        type Output = Type;
+        fn bitor(self, other: Type) -> Type {
+            match(self, other) {
+                (Type::TBool(b1), Type::TBool(b2))  => Type::TBool(b1 | b2), 
+                _                       => Type::TError(Error::Error)
+            }
+        }
+    }
+
+    impl<'a> Not for Type {
+        type Output = Type;
+        fn not(self) -> Type {
+            match self {
+                Type::TBool(b)  => Type::TBool(!b), 
+                _               => Type::TError(Error::Error)
             }
         }
     }

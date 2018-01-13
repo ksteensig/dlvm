@@ -1,5 +1,5 @@
 [package]
-name = "dlvm-rust"
+name = "dlvm"
 version = "0.1.0"
 authors = ["Kasper Steensig <kasper.steensig@gmail.com>"]
 

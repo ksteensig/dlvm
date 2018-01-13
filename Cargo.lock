@@ -1,4 +1,4 @@
 [[package]]
-name = "dlvm-rust"
+name = "dlvm"
 version = "0.1.0"
 
