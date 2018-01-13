@@ -7,14 +7,17 @@ pub mod ttype {
         //ErrorDescription(Box<String>)
     }
 
+    type Address = u32;
+
     #[derive(Debug)]
     pub enum Type {
-        TInteger(i64, u32),
-        TFloat(f64, u32),
-        TBool(bool, u32),
-        TChar(char, u32),
-        TReference(u32),
-        TArray(u32, u32),
+        TInteger(Option<Address>, i64),
+        TFloat(Option<Address>, f64),
+        TBool(Option<Address>, bool),
+        TChar(Option<Address>, char),
+        TString(Address, u32),
+        TReference(Address),
+        TArray(Address, u32),
         TError(Box<Error>)
     }
 

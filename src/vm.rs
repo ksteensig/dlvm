@@ -6,9 +6,10 @@ pub mod vm {
         stack       : Vec<Type>,
         pagetable   : Vec<Option<u32>>,
         heap        : Vec<Type>,
-        pub pc      : usize,
-        pub sp      : usize,
-        pub fp      : usize
+        pub pc      : u64,
+        pub sp      : u32,
+        pub fp      : u32,
+        pub hp      : u32,
     }
 
     impl VM {
@@ -18,9 +19,9 @@ pub mod vm {
                 stack: Vec::new(),
                 pagetable: Vec::new(),
                 heap: Vec::new(),
-                pc: 0 as usize,
-                sp: 0 as usize,
-                fp: 0 as usize
+                pc: 0,
+                sp: 0,
+                fp: 0
             };
 
             vm
@@ -42,8 +43,19 @@ pub mod vm {
             self.sp += 1
         }
 
-        pub fn malloc() {
-            
+        pub fn malloc(&mut self, size: u32) {
+            let mut addr: Option<u32> = None;
+
+            for i in self.pagetable {
+                match i {
+                    Some(v) => {addr = Some<v>},
+                    _       => None
+                }
+            }
+        }
+
+        pub fn gc(&mut self) {
+
         }
 
         pub fn next(&mut self) -> u8 {
