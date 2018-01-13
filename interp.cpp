@@ -14,11 +14,14 @@ void VM::Execute() {
             case NOP:
                 break;
             case POP:
+                POP_HANDLER();
                 break;
             case PUSH_INT:
+                cout << "push" << endl;
                 PUSH_INT_HANDLER();
                 break;
             case PRINT:
+                cout << "print" << endl;
                 PRINT_HANDLER();
                 break;
             case HALT:

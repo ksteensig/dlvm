@@ -10,7 +10,7 @@ int main() {
             PRINT,
             HALT};
 
-    VM vm{make_unique<vector<uint8_t>>(program)};
+    VM vm{make_unique<vector<uint8_t>>(program), 4000, 16000};
 
     vm.Execute();
 

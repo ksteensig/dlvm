@@ -6,6 +6,7 @@
 #include <vector>
 #include <iostream>
 #include <optional>
+#include <variant>
 
 namespace dlvm {
 
@@ -22,78 +23,63 @@ typedef enum type_e {
     REFERENCE
 } type_t;
 
+typedef uint32_t addr_t;
+typedef tuple<addr_t, uint32_t> array_t;
+typedef variant<int64_t, double, bool, char, addr_t, array_t> TypeCollection;
+
 struct Type {
     type_t type;
     bool Marked = false;
-    optional<Type> Next;
+    optional<addr_t> Next;
 
-    virtual void Print() = 0;
+    TypeCollection Value;
+
+    Type()
+    { type = NIL; }
+
+    Type(type_t t, TypeCollection val)
+        : type{t}
+        , Value{val}
+    { }
 };
 
-struct TError : Type {
-    void Print() { }
+typedef enum ErrorCode {
+    OK,
+    OUT_OF_MEMORY,
+    OUT_OF_BOUNDS,
+    STACK_OVERFLOW,
+    TYPE_ERROR,
+    NULL_REFERENCE,
+    UNKNOWN
+} ErrorCode;
+
+template<class T>
+struct Result {
+    public:
+    ErrorCode ErrCode;
+    T Value;
+    string Message;
+
+    Result(T value, string msg, ErrorCode error_code)
+        : Value{value}
+        , Message{msg}
+        , ErrCode{error_code}
+    { }
 };
 
-struct TInteger : Type {
-    int64_t Value;
+template<class T>
+Result<T> OkResult(type_t type, TypeCollection value);
 
-    TInteger (int64_t V)
-        : Value{V}
-    { type = INTEGER; }
+template<class T>
+Result<T> TypeError(type_t type, TypeCollection value);
 
-    void Print() {cout << Value;}
-};
-
-struct TFloat : Type {
-    double Value;
-
-    TFloat (double V)
-        : Value{V}
-    { type = FLOAT; }
-
-    void Print() {cout << Value;}
-};
-
-struct TBool : Type {
-    bool Bool;
-
-    TBool(bool B)
-        : Bool{B}
-    { type = BOOL; }
-
-    void Print() {cout << Bool;}
-};
-
-struct TString : Type {
-    string String;
-
-    TString(string S)
-        : String{S}
-    { type = STRING; }
-
-    void Print() {cout << String;}
-};
-
-struct TReference : Type {
-    uint32_t Address;
-
-    TReference(uint32_t addr)
-        : Address{addr}
-    { type = REFERENCE; }
-};
-
-
-struct TArray : TReference {
-    uint32_t Length;
-
-    void Insert(shared_ptr<Type> obj, uint32_t pos);
-    optional<Type> Access(uint32_t pos);
-
-    TArray(uint32_t len)
-        : Length(len)
-    { type = ARRAY; }
-
-    void Print() {}
-};
+Result<Type> operator+ (Type lhs, Type rhs);
+Result<Type> operator- (Type lhs, Type rhs);
+Result<Type> operator* (Type lhs, Type rhs);
+Result<Type> operator/ (Type lhs, Type rhs);
+Result<Type> operator&& (Type lhs, Type rhs);
+Result<Type> operator|| (Type lhs, Type rhs);
+Result<Type> operator! (Type rhs);
+ostream& operator<< (ostream &o, Type t);
 
 }
