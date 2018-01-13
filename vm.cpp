@@ -12,8 +12,8 @@ shared_ptr<Type> VM::Pop() {
     return obj;
 }
 
-void VM::Push(shared_ptr<Type> obj) {
-    Stack.push_back(obj);
+void VM::Push(Type obj) {
+    Stack->push_back(obj);
     SP++;
 }
 

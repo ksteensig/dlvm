@@ -12,20 +12,26 @@ namespace dlvm {
 using namespace std;
 using namespace dlvm;
 
+struct AddrTable {
+    
+
+};
+
 class VM {
     public:
     unique_ptr<vector<uint8_t>> Program;
-    vector<shared_ptr<Type>> Stack; 
+    unique_ptr<vector<Type>> Stack;
     uint64_t SP = 0;
     uint64_t PC = 0;
     uint64_t FP = 0;
 
-    VM(unique_ptr<vector<uint8_t>> P)
-        : Program{move(P)}
+    VM(unique_ptr<vector<uint8_t>> P, unique_ptr<vector<Type>> S)
+        : Program{move(P)},
+          Stack{move(S)}
     { }
 
-    shared_ptr<Type> Pop();
-    void Push(shared_ptr<Type> obj);
+    Type Pop();
+    void Push(Type obj);
     uint8_t Next();
     void Execute();
     void GarbageCollect();

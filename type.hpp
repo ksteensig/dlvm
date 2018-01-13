@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <optional>
 
 namespace dlvm {
 
@@ -17,14 +18,20 @@ typedef enum type_e {
     FLOAT,
     BOOL,
     STRING,
-    LIST
+    ARRAY,
+    REFERENCE
 } type_t;
 
 struct Type {
     type_t type;
     bool Marked = false;
-    shared_ptr<Type> Next;
+    optional<Type> Next;
+
     virtual void Print() = 0;
+};
+
+struct TError : Type {
+    void Print() { }
 };
 
 struct TInteger : Type {
@@ -67,17 +74,24 @@ struct TString : Type {
     void Print() {cout << String;}
 };
 
-struct TList : Type {
-    vector<shared_ptr<Type>> List;
+struct TReference : Type {
+    uint32_t Address;
 
-    void Append(shared_ptr<Type> obj);
-    void Prepend(shared_ptr<Type> obj);
-    void Set(shared_ptr<Type>, uint64_t pos);
-    void Insert(shared_ptr<Type> obj, uint64_t pos);
-    shared_ptr<Type> Access(uint64_t pos);
+    TReference(uint32_t addr)
+        : Address{addr}
+    { type = REFERENCE; }
+};
 
-    TList ()
-    { type = LIST; }
+
+struct TArray : TReference {
+    uint32_t Length;
+
+    void Insert(shared_ptr<Type> obj, uint32_t pos);
+    optional<Type> Access(uint32_t pos);
+
+    TArray(uint32_t len)
+        : Length(len)
+    { type = ARRAY; }
 
     void Print() {}
 };
