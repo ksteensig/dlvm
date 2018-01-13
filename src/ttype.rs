@@ -4,17 +4,18 @@ pub mod ttype {
     #[derive(Debug)]
     pub enum Error {
         Error,
-        ErrorDescription(String)
+        //ErrorDescription(Box<String>)
     }
 
     #[derive(Debug)]
     pub enum Type {
-        TInteger(i64),
-        TFloat(f64 ),
-        TBool(bool),
-        TString(String),
-        TList(Vec<Type>),
-        TError(Error)
+        TInteger(i64, u32),
+        TFloat(f64, u32),
+        TBool(bool, u32),
+        TChar(char, u32),
+        TReference(u32),
+        TArray(u32, u32),
+        TError(Box<Error>)
     }
 
     impl<'a> Add for Type {

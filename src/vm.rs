@@ -2,11 +2,13 @@ pub mod vm {
     use ttype::ttype::*;
 
     pub struct VM {
-        program : Vec<u8>,
-        stack   : Vec<Type>,
-        pub pc  : usize,
-        pub sp  : usize,
-        pub fp  : usize
+        program     : Vec<u8>,
+        stack       : Vec<Type>,
+        pagetable   : Vec<Option<u32>>,
+        heap        : Vec<Type>,
+        pub pc      : usize,
+        pub sp      : usize,
+        pub fp      : usize
     }
 
     impl VM {
@@ -14,6 +16,8 @@ pub mod vm {
             let vm: VM = VM {
                 program: program,
                 stack: Vec::new(),
+                pagetable: Vec::new(),
+                heap: Vec::new(),
                 pc: 0 as usize,
                 sp: 0 as usize,
                 fp: 0 as usize
@@ -36,6 +40,10 @@ pub mod vm {
         pub fn push(&mut self, val: Type) {
             self.stack.push(val);
             self.sp += 1
+        }
+
+        pub fn malloc() {
+            
         }
 
         pub fn next(&mut self) -> u8 {
