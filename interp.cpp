@@ -17,11 +17,12 @@ void VM::Execute() {
                 POP_HANDLER();
                 break;
             case PUSH_INT:
-                cout << "push" << endl;
                 PUSH_INT_HANDLER();
                 break;
+            case CREATE_REFERENCE:
+                CREATE_REFERENCE_HANDLER();
+                break;
             case PRINT:
-                cout << "print" << endl;
                 PRINT_HANDLER();
                 break;
             case HALT:

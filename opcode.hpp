@@ -12,12 +12,9 @@ typedef enum opcode_e {
     MUL                 = 0x12,
     DIV                 = 0x13,
     LIST_CREATE         = 0x20,
-    LIST_APPEND         = 0x21,
-    LIST_PREPEND        = 0x22,
-    LIST_REMOVE         = 0x23,
-    LIST_SET            = 0x24,
-    LIST_INSERT         = 0x25,
-    LIST_sACCESS         = 0x26,
+    LIST_ACCESS         = 0x21,
+    LIST_SET            = 0x22,
+    CREATE_REFERENCE    = 0x23,
     PRINT,
     HALT
 } opcode_t;

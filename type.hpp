@@ -50,36 +50,44 @@ typedef enum ErrorCode {
     STACK_OVERFLOW,
     TYPE_ERROR,
     NULL_REFERENCE,
+    INVALID_ARGUMENT,
     UNKNOWN
 } ErrorCode;
 
-template<class T>
 struct Result {
-    public:
     ErrorCode ErrCode;
-    T Value;
+    Type Value;
     string Message;
 
-    Result(T value, string msg, ErrorCode error_code)
+    Result(Type value, string msg, ErrorCode error_code)
         : Value{value}
         , Message{msg}
         , ErrCode{error_code}
     { }
+
+    Result(Type value)
+        : Value{value}
+        , ErrCode{OK}
+    { }
+
+    Result(string msg, ErrorCode error_code)
+        : Message{msg}
+        , ErrCode{error_code}
+    { }
 };
 
-template<class T>
-Result<T> OkResult(type_t type, TypeCollection value);
+Result OkResult(Type value);
+Result TypeError(Type value);
+Result ThrowError(string msg, Type value, ErrorCode error_code);
+Result ThrowError(string msg, ErrorCode error_code);
 
-template<class T>
-Result<T> TypeError(type_t type, TypeCollection value);
-
-Result<Type> operator+ (Type lhs, Type rhs);
-Result<Type> operator- (Type lhs, Type rhs);
-Result<Type> operator* (Type lhs, Type rhs);
-Result<Type> operator/ (Type lhs, Type rhs);
-Result<Type> operator&& (Type lhs, Type rhs);
-Result<Type> operator|| (Type lhs, Type rhs);
-Result<Type> operator! (Type rhs);
+Result operator+ (Result lhs, Result rhs);
+Result operator- (Type lhs, Type rhs);
+Result operator* (Type lhs, Type rhs);
+Result operator/ (Type lhs, Type rhs);
+Result operator&& (Type lhs, Type rhs);
+Result operator|| (Type lhs, Type rhs);
+Result operator! (Type rhs);
 ostream& operator<< (ostream &o, Type t);
 
 }

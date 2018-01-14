@@ -27,14 +27,18 @@ class VM {
 
     Type r1, r2, r3, r4;
 
-    Type Pop();
-    void Push(Type obj);
+    Result Pop();
+    Result Push(Type obj);
 
-    uint64_t GetQuad();
+    uint64_t GetEightBytes();
 
+    optional<addr_t> last_in_heap;
+    uint32_t Mark(addr_t addr);
+    void Compact(uint32_t marked);
+    uint32_t Move(addr_t heap_addr);
     void GarbageCollect();
-    Result<addr_t> Malloc(uint32_t size);
-    Result<addr_t> TranslateAddress(addr_t addr);
+    Result Malloc(uint32_t size);
+    Result TranslateAddress(addr_t addr);
 
     public:
     VM(unique_ptr<vector<uint8_t>> P, uint32_t ssize, uint32_t hsize)
@@ -42,16 +46,21 @@ class VM {
         , ssize{ssize}
         , hsize{hsize}
     {
+        Stack = make_unique<vector<Type>>();
         Heap = make_unique<Type[]>(hsize);
+        PageTable = make_unique<vector<optional<addr_t>>>(hsize, optional<addr_t>{});
+        optional<addr_t> last_in_heap{};
     }
 
     uint8_t Next();
     void Execute();
-    Result<Type> POP_HANDLER();
-    Result<Type> PUSH_INT_HANDLER();
-    Result<Type> ADD_HANDLER();
-    Result<Type> CREATE_REFERENCE_HANDLER();
-    void PRINT_HANDLER();
+    Result POP_HANDLER();
+    Result PUSH_INT_HANDLER();
+    Result ADD_HANDLER();
+    Result CREATE_REFERENCE_HANDLER();
+    Result PRINT_HANDLER();
+
+
     
 };
 
