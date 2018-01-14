@@ -84,7 +84,10 @@ void VM::Compact(uint32_t marked) {
 
     for (addr_t i = 0; i < HP; i++) {
         if (relocated == marked) {
-
+            HP = i;
+            break;
+        } else if (!Heap[i].Marked) {
+            Move(i);
         }
     }
 
