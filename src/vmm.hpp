@@ -26,8 +26,11 @@ class Memory {
 
     template<class T>
     void Grow(unique_ptr<T[]> array, uint32_t curr_size, uint32_t new_size);
-    void Move(addr_t src, addr_t dest, uint32_t size);
+    void Copy(addr_t src, addr_t dest, uint32_t size);
     void Reset(addr_t dest, uint32_t size);
+    addr_t Move(addr_t dest);
+    void ResetPageTable();
+    void UpdatePageTable(addr_t old_addr, addr_t new_addr);
     
     inline bool                     OccupiedAddress(vaddr_t addr);
     inline vaddr_t                  TranslateAddress(addr_t addr);

@@ -50,7 +50,7 @@ Result<ValueType> Memory::Malloc(uint32_t size) {
     return ThrowError<ValueType>("Out of address space", OUT_OF_MEMORY);
 }
 
-void Memory::Move(addr_t src, addr_t dest, uint32_t size) {
+void Memory::Copy(addr_t src, addr_t dest, uint32_t size) {
     copy_n(&(Heap[src]), size, &(Heap[dest]));
 }
 
@@ -58,6 +58,47 @@ void Memory::Reset(addr_t dest, uint32_t size) {
     for (addr_t i = dest; i < dest + size; i++) {
         Heap[i] = ReferenceType{};
     }
+}
+
+void Memory::UpdatePageTable(addr_t old_addr, addr_t new_addr) {
+    for (addr_t i = 0; i < m_pagetable_alloc; i++) {
+        if (old_addr == PageTable[i]) {
+            PageTable[i] = PageTable[i] | (1 << 0x40) | new_addr;
+        }
+    }
+}
+
+void Memory::ResetPageTable() {
+    for (addr_t i = 0; i < m_pagetable_alloc; i++) {
+        PageTable[i] &= ~(1 << 0x40);
+    }
+}
+
+addr_t Memory::Move(addr_t dest) {
+    addr_t next_dead;
+
+    for (addr_t src = dest; src < heap_ptr; src++) {
+        if (Heap[src].Marked) {
+            switch (Heap[src].type) {
+                case ARRAY: {
+                    array_t size{get<array_t>(Heap[src].Value)};
+                    Copy(src, dest, size);
+                    Reset(dest, size);
+                    UpdatePageTable(src, dest);
+                    next_dead = dest + size;
+                }
+                    break;
+                default:
+                    Copy(src, dest, 1);
+                    Reset(dest, 1);
+                    UpdatePageTable(src, dest);
+                    next_dead = dest + 1;
+                    break;
+            }
+        }
+    }
+
+    return next_dead;
 }
 
 inline uint32_t Memory::Mark(addr_t addr) {
@@ -100,18 +141,23 @@ inline void Memory::Compact(uint32_t marked) {
 
     for (addr_t i = 0; i < heap_ptr; i++) {
         if (moved == marked) {
+            heap_ptr = i;
             break;
         } else if (Heap[i].Marked) {
             moved++;
-        } else {
-            /*
+            Heap[i].Marked = false;
             switch (Heap[i].type) {
                 case ARRAY:
-                default {
-                    Heap[i]
-                }
+                    i += get<array_t>(Heap[i].Value);
+                    break;
+                default:
+                    break;
             }
-            */
+        } else {
+            moved++;
+            auto new_dead = Move(i);
+            Heap[i].Marked = false;
+            i = new_dead;
         }
     }
 }
@@ -124,6 +170,8 @@ void Memory::GarbageCollect() {
             marked += Mark(get<addr_t>(Stack[i].Value));
         }
     }
+
+    ResetPageTable();
 
     Compact(marked);
 }
