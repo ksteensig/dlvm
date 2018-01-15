@@ -41,29 +41,33 @@ uint32_t VM::Mark(addr_t addr) {
         case INTEGER:
             Heap[addr].Marked = true;
             marked++;
+        case ARRAY:
+            Heap[addr].Marked = true;
+            marked++;
     }
 
     return marked;
 }
 
-uint32_t VM::Move(addr_t heap_addr) {
+void VM::Move(addr_t heap_addr) {
     auto data_addr = 0;
-    auto delta = 0;
-    auto moved = 0;
 
     for (addr_t i = 0; i < HP; i++) {
         if (Heap[i].Marked) {
             data_addr = i;
             switch (Heap[i].type) {
-                case INTEGER:
-                    Heap[heap_addr] = Heap[i];
-                    Heap[i].Marked = false;
-                    delta = i - heap_addr;
-                    moved = 0;
+                case ARRAY:
+                case STRING: {
+                    auto length{get<1>(get<array_t>(Heap[i].Value))};
+                    copy_n(&Heap[heap_addr], length, &Heap[i]);
+                }
                     break;
                 default:
-                    return 0;
+                    Heap[heap_addr] = Heap[i];
+                    Heap[i].Marked = false;
+                    break;
             }
+            break;
         }
     }
 
@@ -75,8 +79,6 @@ uint32_t VM::Move(addr_t heap_addr) {
             }
         }
     }
-
-    return moved;
 }
 
 void VM::Compact(uint32_t marked) {
@@ -88,6 +90,16 @@ void VM::Compact(uint32_t marked) {
             break;
         } else if (!Heap[i].Marked) {
             Move(i);
+            relocated++;
+        } else {
+            switch (Heap[i].type) {
+                case ARRAY:
+                case STRING:
+                    i += get<1>(get<array_t>(Heap[i].Value));
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -104,6 +116,17 @@ void VM::GarbageCollect() {
     }
 
     Compact(marked);
+
+    for (addr_t i = 0; i < HP; i++) {
+        switch (Heap[i].type) {
+            case ARRAY:
+            case STRING:
+                i += get<1>(get<array_t>(Heap[i].Value));
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 Result VM::Malloc(uint32_t size) {

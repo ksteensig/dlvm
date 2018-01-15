@@ -1,11 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <iostream>
-#include <optional>
 #include <variant>
 
 namespace dlvm {
@@ -13,34 +12,64 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
+typedef uint64_t vaddr_t;
+typedef uint32_t addr_t;
+
+typedef uint32_t array_t;
+typedef variant<int64_t, uint64_t, double, bool, char, addr_t> VType;
+typedef variant<array_t, VType> RType;
+
+struct ValueType;
+struct ReferenceType;
+template<typename Type>
+struct Result;
+
 typedef enum type_e {
     NIL,
     INTEGER,
+    UINTEGER,
     FLOAT,
     BOOL,
     STRING,
     ARRAY,
-    REFERENCE
+    REFERENCE,
+    STRUCT
 } type_t;
 
-typedef uint32_t addr_t;
-typedef tuple<addr_t, uint32_t> array_t;
-typedef variant<int64_t, double, bool, char, addr_t, array_t> TypeCollection;
-
-struct Type {
+struct ValueType {
     type_t type;
-    bool Marked = false;
-    optional<addr_t> Next;
+    VType Value;
 
-    TypeCollection Value;
-
-    Type()
+    ValueType()
     { type = NIL; }
 
-    Type(type_t t, TypeCollection val)
-        : type{t}
-        , Value{val}
+    ValueType(type_t type, VType value)
+        : type{type}
+        , Value{value}
     { }
+
+    ReferenceType Box();
+};
+
+struct ReferenceType {
+    type_t type;
+    bool Marked = false;
+    RType Value;
+
+    ReferenceType()
+    { type = NIL; }
+
+    ReferenceType(ValueType value)
+        : type{value.type}
+        , Value{value.Value}
+    { }
+
+    ReferenceType(type_t type, RType value)
+        : type{type}
+        , Value{value}
+    { }
+
+    Result<ValueType> Unbox();
 };
 
 typedef enum ErrorCode {
@@ -54,6 +83,7 @@ typedef enum ErrorCode {
     UNKNOWN
 } ErrorCode;
 
+template<typename Type>
 struct Result {
     ErrorCode ErrCode;
     Type Value;
@@ -76,11 +106,16 @@ struct Result {
     { }
 };
 
-Result OkResult(Type value);
-Result TypeError(Type value);
-Result ThrowError(string msg, Type value, ErrorCode error_code);
-Result ThrowError(string msg, ErrorCode error_code);
+template<typename Type>
+Result<Type> OkResult(Type value);
+template<typename Type>
+Result<Type> TypeError(Type value);
+template<typename Type>
+Result<Type> ThrowError(string msg, Type value, ErrorCode error_code);
+template<typename Type>
+Result<Type> ThrowError(string msg, ErrorCode error_code);
 
+/*
 Result operator+ (Result lhs, Result rhs);
 Result operator- (Type lhs, Type rhs);
 Result operator* (Type lhs, Type rhs);
@@ -89,5 +124,5 @@ Result operator&& (Type lhs, Type rhs);
 Result operator|| (Type lhs, Type rhs);
 Result operator! (Type rhs);
 ostream& operator<< (ostream &o, Type t);
-
+*/
 }

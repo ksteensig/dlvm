@@ -1,9 +1,10 @@
 #pragma once
 
 #include <vector>
-#include <stdint.h>
+#include <cstdint>
 #include <memory>
 #include <optional>
+#include <algorithm>
 
 #include "opcode.hpp"
 #include "type.hpp"
@@ -35,7 +36,7 @@ class VM {
     optional<addr_t> last_in_heap;
     uint32_t Mark(addr_t addr);
     void Compact(uint32_t marked);
-    uint32_t Move(addr_t heap_addr);
+    void Move(addr_t heap_addr);
     void GarbageCollect();
     Result Malloc(uint32_t size);
     Result TranslateAddress(addr_t addr);
@@ -59,9 +60,6 @@ class VM {
     Result ADD_HANDLER();
     Result CREATE_REFERENCE_HANDLER();
     Result PRINT_HANDLER();
-
-
-    
 };
 
 }

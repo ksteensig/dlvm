@@ -1,9 +1,11 @@
-#include "vm.hpp"
+#include "vmm.hpp"
+#include "type.hpp"
 
 using namespace dlvm;
 using namespace std;
 
 int main() {
+    /*
     auto program = vector<uint8_t>{
             PUSH_INT,
             0, 0, 0, 0, 0, 0, 0, 10,
@@ -13,6 +15,12 @@ int main() {
     VM vm{make_unique<vector<uint8_t>>(program), 4000, 16000};
 
     vm.Execute();
+    */
+
+    cout << "ValueType: " << sizeof(ValueType) << endl;
+    cout << "VType: " << sizeof(VType) << endl;
+    cout << "ReferenceType: " << sizeof(ReferenceType) << endl;
+    cout << "RType: " << sizeof(RType) << endl;
 
     return 0;
 }
