@@ -1,5 +1,4 @@
-#include "vmm.hpp"
-#include "type.hpp"
+#include "interpreter.hpp"
 
 using namespace dlvm;
 using namespace std;

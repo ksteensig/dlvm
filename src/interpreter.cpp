@@ -1,11 +1,11 @@
-#include "vm.hpp"
+#include "interpreter.hpp"
 
 namespace dlvm {
 
 using namespace std;
 using namespace dlvm;
 
-void VM::Execute() {
+void Interpreter::Execute() {
     
     auto op = Next();
     
@@ -33,6 +33,16 @@ void VM::Execute() {
 
         op = Next();
     }
+}
+
+uint64_t Interpreter::NextEightBytes() {
+    uint64_t value = 0;
+
+    for (uint8_t i = 0; i < 8; i++) {
+        value = (value << 8) | Next();
+    }
+
+    return value;
 }
 
 }

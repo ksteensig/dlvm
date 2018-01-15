@@ -5,7 +5,7 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
-Result<ValueType> Memory::Pop() {
+Result<ValueType> MemoryManager::Pop() {
     if (stack_ptr > 0) {
         return OkResult(
             Stack[--stack_ptr]
@@ -15,7 +15,7 @@ Result<ValueType> Memory::Pop() {
     }
 }
 
-Result<ValueType> Memory::Push(ValueType obj) {
+Result<ValueType> MemoryManager::Push(ValueType obj) {
     if (stack_ptr == m_stack_alloc) {
 
     }
@@ -24,15 +24,15 @@ Result<ValueType> Memory::Push(ValueType obj) {
     return OkResult(obj);
 }
 
-inline vaddr_t Memory::TranslateAddress(addr_t addr) {
+inline vaddr_t MemoryManager::TranslateAddress(addr_t addr) {
     return PageTable[addr];
 }
 
-inline bool Memory::OccupiedAddress(vaddr_t addr) {
+inline bool MemoryManager::OccupiedAddress(vaddr_t addr) {
     return (addr >> 0x3F) == 1;
 }
 
-Result<ValueType> Memory::Malloc(uint32_t size) {
+Result<ValueType> MemoryManager::Malloc(uint32_t size) {
     if (size + heap_ptr > m_heap_alloc) {
         //GarbageCollect();
         if (size + heap_ptr > m_heap_alloc)
@@ -50,17 +50,17 @@ Result<ValueType> Memory::Malloc(uint32_t size) {
     return ThrowError<ValueType>("Out of address space", OUT_OF_MEMORY);
 }
 
-void Memory::Copy(addr_t src, addr_t dest, uint32_t size) {
+void MemoryManager::Copy(addr_t src, addr_t dest, uint32_t size) {
     copy_n(&(Heap[src]), size, &(Heap[dest]));
 }
 
-void Memory::Reset(addr_t dest, uint32_t size) {
+void MemoryManager::Reset(addr_t dest, uint32_t size) {
     for (addr_t i = dest; i < dest + size; i++) {
         Heap[i] = ReferenceType{};
     }
 }
 
-void Memory::UpdatePageTable(addr_t old_addr, addr_t new_addr) {
+void MemoryManager::UpdatePageTable(addr_t old_addr, addr_t new_addr) {
     for (addr_t i = 0; i < m_pagetable_alloc; i++) {
         if (old_addr == PageTable[i]) {
             PageTable[i] = PageTable[i] | (1 << 0x40) | new_addr;
@@ -68,13 +68,13 @@ void Memory::UpdatePageTable(addr_t old_addr, addr_t new_addr) {
     }
 }
 
-void Memory::ResetPageTable() {
+void MemoryManager::ResetPageTable() {
     for (addr_t i = 0; i < m_pagetable_alloc; i++) {
         PageTable[i] &= ~(1 << 0x40);
     }
 }
 
-addr_t Memory::Move(addr_t dest) {
+addr_t MemoryManager::Move(addr_t dest) {
     addr_t next_dead;
 
     for (addr_t src = dest; src < heap_ptr; src++) {
@@ -101,7 +101,7 @@ addr_t Memory::Move(addr_t dest) {
     return next_dead;
 }
 
-inline uint32_t Memory::Mark(addr_t addr) {
+inline uint32_t MemoryManager::Mark(addr_t addr) {
     uint32_t marked = 0;
     addr_t heap_addr = (addr_t)PageTable[addr];
 
@@ -136,7 +136,7 @@ inline uint32_t Memory::Mark(addr_t addr) {
     return marked;
 }
 
-inline void Memory::Compact(uint32_t marked) {
+inline void MemoryManager::Compact(uint32_t marked) {
     uint32_t moved = 0;
 
     for (addr_t i = 0; i < heap_ptr; i++) {
@@ -162,7 +162,7 @@ inline void Memory::Compact(uint32_t marked) {
     }
 }
 
-void Memory::GarbageCollect() {
+void MemoryManager::GarbageCollect() {
     uint32_t marked = 0;
 
     for (addr_t i = 0; i < m_stack_alloc; i++) {

@@ -13,16 +13,18 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
-class Memory {
+class MemoryManager {
     addr_t m_max_stack              = 4096;
     addr_t m_stack_alloc            = 4096;
     addr_t m_heap_alloc             = 8192;
     addr_t m_max_heap               = 8192;
     addr_t m_max_pagetable          = 8192;
     addr_t m_pagetable_alloc        = 8192;
-
     addr_t heap_ptr                 = 0;
-    addr_t stack_ptr                = 0;
+
+    unique_ptr<ValueType[]>         Stack;
+    unique_ptr<ReferenceType[]>     Heap;
+    unique_ptr<vaddr_t[]>           PageTable;
 
     template<class T>
     void Grow(unique_ptr<T[]> array, uint32_t curr_size, uint32_t new_size);
@@ -39,15 +41,14 @@ class Memory {
     void                            GarbageCollect();
 
     public:
-    unique_ptr<ValueType[]>         Stack;
-    unique_ptr<ReferenceType[]>     Heap;
-    unique_ptr<vaddr_t[]>           PageTable;
+    addr_t stack_ptr                = 0;
+    addr_t frame_ptr                = 0;
 
     Result<ValueType>               Malloc(uint32_t size);
     Result<ValueType>               Push(ValueType value);
     Result<ValueType>               Pop();
 
-    Memory(map<string, uint32_t> settings)
+    MemoryManager(map<string, uint32_t> settings)
         : Stack{make_unique<ValueType[]>(m_max_stack)}
         , Heap{make_unique<ReferenceType[]>(m_max_heap)}
         , PageTable{make_unique<vaddr_t[]>(m_max_pagetable)}
