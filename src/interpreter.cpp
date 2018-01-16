@@ -14,16 +14,12 @@ void Interpreter::Execute() {
             case NOP:
                 break;
             case POP:
-                POP_HANDLER();
                 break;
             case PUSH_INT:
-                PUSH_INT_HANDLER();
                 break;
             case CREATE_REFERENCE:
-                CREATE_REFERENCE_HANDLER();
                 break;
             case PRINT:
-                PRINT_HANDLER();
                 break;
             case HALT:
                 return;
@@ -35,14 +31,22 @@ void Interpreter::Execute() {
     }
 }
 
-uint64_t Interpreter::NextEightBytes() {
-    uint64_t value = 0;
+inline uint8_t Interpreter::Next() {
+    return Program->at(pc++);
+}
 
-    for (uint8_t i = 0; i < 8; i++) {
+inline uint32_t Interpreter::NextQuad() {
+    uint32_t value = 0;
+
+    for (uint8_t i = 0; i < 4; i++) {
         value = (value << 8) | Next();
     }
 
     return value;
+}
+
+uint64_t Interpreter::NextWord() {
+    return (NextQuad() << 0x20) | NextQuad();
 }
 
 }

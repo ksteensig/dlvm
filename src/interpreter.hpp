@@ -9,6 +9,7 @@
 #include "opcode.hpp"
 #include "type.hpp"
 #include "vmm.hpp"
+#include "function.hpp"
 
 namespace dlvm {
 
@@ -18,7 +19,8 @@ using namespace dlvm;
 class Interpreter {
     MemoryManager Memory;
 
-    unique_ptr<uint8_t[]> Program;
+
+    unique_ptr<vector<uint8_t>> Program;
     uint64_t pc = 0;
 
     ValueType reg1, reg2, reg3, reg4;
@@ -26,17 +28,25 @@ class Interpreter {
     Result<ValueType> Pop();
     Result<ValueType> Push(ValueType obj);
 
-    uint8_t Next();
-    uint64_t NextEightBytes();
+    inline uint8_t Next();
+    inline uint32_t NextQuad();
+    inline uint64_t NextWord();
 
-    Result<ValueType> POP_HANDLER();
-    Result<ValueType> PUSH_INT_HANDLER();
-    Result<ValueType> ADD_HANDLER();
-    Result<ValueType> CREATE_REFERENCE_HANDLER();
-    Result<ValueType> PRINT_HANDLER();
+    Result<ValueType> PushUInt();
+    Result<ValueType> PushInt();
+    Result<ValueType> PushFloat();
+    Result<ValueType> PushBool();
+    Result<ValueType> PushChar();
+    Result<ValueType> CreateReference();
+    Result<ValueType> AccessReference();
+    Result<ValueType> CreateArray();
+    Result<ValueType> AccessArray();
+    Result<ValueType> InsertArray();
+    Result<ValueType> Call();
+    Result<ValueType> Return();
 
     public:
-    Interpreter(unique_ptr<uint8_t[]> program, map<string, uint32_t> settings)
+    Interpreter(unique_ptr<vector<uint8_t>> program, map<string, uint32_t> settings)
         : Program{move(program)}
         , Memory{MemoryManager{settings}}
     { }
