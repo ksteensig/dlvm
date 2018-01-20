@@ -12,12 +12,12 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
-typedef uint64_t vaddr_t;
-typedef uint32_t addr_t;
+using vaddr_t = uint64_t;
+using addr_t = uint32_t;
 
-typedef uint32_t array_t;
-typedef variant<int64_t, uint64_t, double, bool, char, addr_t> VType;
-typedef variant<array_t, VType> RType;
+using array_t = uint32_t;
+using VType = variant<int64_t, uint64_t, double, bool, char, addr_t>;
+using RType = variant<array_t, VType>;
 
 struct ValueType;
 struct ReferenceType;
