@@ -4,56 +4,22 @@ namespace dlvm {
 
 using namespace dlvm;
 using namespace std;
-//using namespace std::literals;
 
-
-ReferenceType ValueType::Box() {
-    return ReferenceType{type, Value};
-}
+ReferenceType ValueType::Box() { return ReferenceType{type, Value}; }
 
 Result<ValueType> ReferenceType::Unbox() {
-    switch (type) {
-        case ARRAY:
-        case STRING:
-        case STRUCT:
-            return ThrowError<ValueType>("", INVALID_ARGUMENT);
-        default:
-            return OkResult<ValueType>(
-                ValueType{type, get<VType>(Value)}
-            );
-    }
-}
-
-template<typename Type>
-Result<Type> OkResult(Type value) {
-    return Result<Type> {
-            value
-        };
-}
-
-template<typename Type>
-Result<Type> TypeError(Type value) {
-    return Result<Type> {
-        value, "Type mismatch", TYPE_ERROR
-    };
-}
-
-template<typename Type>
-Result<Type> ThrowError(Type value, string msg, ErrorCode error_code) {
-    return Result<Type> {
-        value, msg, error_code
-    };
-}
-
-template<typename Type>
-Result<Type> ThrowError(string msg, ErrorCode error_code) {
-    return Result<Type> {
-        Type{}, msg, error_code
-    };
+  switch (type) {
+    case ARRAY:
+    case STRING:
+    case STRUCT:
+      return LiftError<ValueType>(INVALID_ARGUMENT, "");
+    default:
+      return LiftType(ValueType{type, get<VType>(Value)});
+  }
 }
 
 /*
-Result operator+ (Result lhs, Result rhs) {
+Either operator+ (Result lhs, Result rhs) {
     if (lhs.ErrCode != OK || rhs.ErrCode != OK) {
         return ThrowError("Invalid value", INVALID_ARGUMENT);
     }
@@ -173,7 +139,7 @@ Result<Type> operator|| (Type lhs, Type rhs) {
 Result<Type> operator! (Type rhs) {
     if (rhs.type == BOOL) {
         return OkResult<Type>(
-                BOOL,
+Either          BOOL,
                 !get<bool>(rhs.Value)
             );
     } else {
@@ -195,4 +161,4 @@ ostream& operator<< (ostream &o, Type t) {
 }
 */
 
-}
+}  // namespace dlvm
