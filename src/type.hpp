@@ -42,6 +42,9 @@ typedef enum type_e {
   CLOSURE
 } type_t;
 
+typedef enum { ADDOP, SUBOP, MULOP } ArithmeticOperator;
+typedef enum { ERROR, OK } result_t;
+
 struct ValueType {
   type_t type;
   VType Value;
@@ -67,8 +70,6 @@ struct ReferenceType {
   Result<ValueType> Unbox();
 };
 
-typedef enum { ERROR, OK } result_t;
-
 template <typename Type>
 struct Result {
   result_t rtype;
@@ -81,26 +82,14 @@ struct Result {
   bool isType() { return rtype == OK; }
 };
 
-template <typename Functor, typename Type>
-Result<Type> MapResult(function<Result<Type>(Result<Type>)> f, Result<Type> r) {
-  switch (r.rtype) {
-    case ERROR:
-      return r;
-    case OK:
-      return LiftType(f(r));
-  }
-}
+template <typename RType, typename PType>
+Result<RType> MapResult(function<Result<RType>(PType)> f, Result<PType> r);
 
-template <typename Type>
-Result<Type> MapResult2(function<Result<Type>(Result<Type>, Result<Type>)> f,
-                        Result<Type> r1, Result<Type> r2) {
-  switch (r1.rtype) {
-    case ERROR:
-      return r1;
-    case OK:
-      return LiftResult(bind(f, get<Type>(r1), _2), r2);
-  }
-}
+/*
+template <typename RType, typename PType, typename OType>
+Result<RType> MapResult2(function<Result<RType>(PType, OType)> f,
+                         Result<PType> r1, Result<OType> r2);
+*/
 
 template <typename Type>
 Result<Type> LiftError(ErrorCode error_code, string msg) {
@@ -112,43 +101,86 @@ Result<Type> LiftType(Type t) {
   return Result<Type>{OK, t};
 }
 
-typedef enum { ADDOP, SUBOP, MULOP } ArithmeticOperator;
+template <typename RType, typename PType>
+Result<RType> MapResult(function<Result<RType>(PType, PType)> f,
+                        Result<PType> r) {
+  switch (r.rtype) {
+    case ERROR:
+      return LiftError<RType>(INVALID_ARGUMENT, "");
+    case OK:
+      return f(r);
+  }
+}
+
+template <typename RType, typename PType, typename OType>
+Result<RType> MapResult2(function<Result<RType>(PType, OType)> f,
+                         Result<PType> r1, Result<OType> r2) {
+  switch (r1.rtype) {
+    case ERROR:
+      return r1;
+    case OK:
+      switch (r2.rtype) {
+        case ERROR:
+          return r2;
+        case OK:
+          return f(get<PType>(r1.result), get<OType>(r2.result));
+        default:
+          return LiftError<RType>(INVALID_ARGUMENT, "");
+      }
+      break;
+    default:
+      return LiftError<RType>(INVALID_ARGUMENT, "");
+  }
+}
 
 template <typename T1, typename T2>
-Result<VType> ArithmeticApply(ArithmeticOperator op, T1 v1, T2 v2) {
+Result<ValueType> ArithmeticApply(ArithmeticOperator op, T1 v1, T2 v2,
+                                  type_t v1_type, type_t v2_type) {
   switch (op) {
     case ADDOP:
-      return LiftType<VType>(v1 + v2);
+      return LiftType<ValueType>(ValueType{max(v1_type, v2_type), v1 + v2});
+    case SUBOP:
+      return LiftType<ValueType>(ValueType{max(v1_type, v2_type), v1 - v2});
+    case MULOP:
+      return LiftType<ValueType>(ValueType{max(v1_type, v2_type), v1 * v2});
     default:
-      return LiftError<VType>(INVALID_ARGUMENT, "");
+      return LiftError<ValueType>(INVALID_ARGUMENT, "");
   }
 }
 
 template <typename T>
-Result<VType> Arithmetic(ArithmeticOperator op, T v1, ValueType v2) {
+Result<ValueType> Arithmetic(ArithmeticOperator op, T v1, ValueType v2,
+                             type_t v1_type) {
   switch (v2.type) {
     case INTEGER:
-      return ArithmeticApply<T, int64_t>(op, v1, get<int64_t>(v2.Value));
+      return ArithmeticApply<T, int64_t>(op, v1, get<int64_t>(v2.Value),
+                                         v1_type, INTEGER);
     case UINTEGER:
-      return ArithmeticApply<T, uint64_t>(op, v1, get<uint64_t>(v2.Value));
+      return ArithmeticApply<T, uint64_t>(op, v1, get<uint64_t>(v2.Value),
+                                          v1_type, UINTEGER);
     case FLOAT:
-      return ArithmeticApply<T, double>(op, v1, get<double>(v2.Value));
+      return ArithmeticApply<T, double>(op, v1, get<double>(v2.Value), v1_type,
+                                        FLOAT);
     default:
-      return LiftError<VType>(INVALID_ARGUMENT, "");
+      return LiftError<ValueType>(INVALID_ARGUMENT, "");
   }
 }
 
-Result<VType> Arithmetic2(ArithmeticOperator op, ValueType v1, ValueType v2) {
-  switch (v1.type) {
-    case INTEGER:
-      return Arithmetic<int64_t>(op, get<int64_t>(v1.Value), v2);
-    case UINTEGER:
-      return Arithmetic<uint64_t>(op, get<uint64_t>(v1.Value), v2);
-    case FLOAT:
-      return Arithmetic<double>(op, get<double>(v1.Value), v2);
-    default:
-      return LiftError<VType>(INVALID_ARGUMENT, "");
+struct Arithmetic2 {
+  ArithmeticOperator op;
+  Arithmetic2(ArithmeticOperator op) : op{op} {}
+  Result<ValueType> operator()(ValueType v1, ValueType v2) {
+    switch (v1.type) {
+      case INTEGER:
+        return Arithmetic<int64_t>(op, get<int64_t>(v1.Value), v2, INTEGER);
+      case UINTEGER:
+        return Arithmetic<uint64_t>(op, get<uint64_t>(v1.Value), v2, UINTEGER);
+      case FLOAT:
+        return Arithmetic<double>(op, get<double>(v1.Value), v2, FLOAT);
+      default:
+        return LiftError<ValueType>(INVALID_ARGUMENT, "");
+    }
   }
-}
+};
 
 }  // namespace dlvm
