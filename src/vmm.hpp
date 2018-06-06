@@ -44,6 +44,9 @@ class MemoryManager {
   addr_t stack_ptr = 0;
   addr_t frame_ptr = 0;
 
+  inline Result<ReferenceType> Insert(addr_t addr, uint32_t offset,
+                                      ReferenceType value);
+  inline Result<ReferenceType> Access(addr_t addr, uint32_t offset);
   Result<ValueType> Malloc(uint32_t size);
   Result<ValueType> Push(ValueType value);
   Result<ValueType> Pop();

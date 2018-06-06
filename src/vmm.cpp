@@ -15,6 +15,7 @@ Result<ValueType> MemoryManager::Pop() {
 
 Result<ValueType> MemoryManager::Push(ValueType obj) {
   if (stack_ptr == m_stack_alloc) {
+    return LiftError<ValueType>(OUT_OF_MEMORY, "");
   }
 
   Stack[stack_ptr++] = obj;
@@ -40,7 +41,7 @@ Result<ValueType> MemoryManager::Malloc(uint32_t size) {
     if (!OccupiedAddress(PageTable[i])) {
       PageTable[i] = (1 << 64) | heap_ptr;
       heap_ptr += size;
-      return LiftType(ValueType{REFERENCE, i});
+      return LiftType(ValueType{PTR, i});
     }
   }
 
@@ -106,19 +107,18 @@ inline uint32_t MemoryManager::Mark(addr_t addr) {
   }
 
   switch (Heap[heap_addr].type) {
-    case STRUCT:
     case STRING:
     case ARRAY: {
       Heap[heap_addr].Marked = true;
       marked++;
       auto size = get<array_t>(Heap[heap_addr].Value);
       for (addr_t i = heap_addr + 1; i < heap_addr + size;) {
-        if (Heap[heap_addr].type == REFERENCE) {
+        if (Heap[heap_addr].type == PTR) {
           marked += Mark(get<addr_t>(Stack[i].Value));
         }
       }
     } break;
-    case REFERENCE:
+    case PTR:
       Heap[heap_addr].Marked = true;
       marked++;
       marked += Mark(get<addr_t>(Heap[heap_addr].Value));
@@ -161,7 +161,7 @@ void MemoryManager::GarbageCollect() {
   uint32_t marked = 0;
 
   for (addr_t i = 0; i < m_stack_alloc; i++) {
-    if (Stack[i].type == REFERENCE) {
+    if (Stack[i].type == PTR) {
       marked += Mark(get<addr_t>(Stack[i].Value));
     }
   }
@@ -170,5 +170,13 @@ void MemoryManager::GarbageCollect() {
 
   Compact(marked);
 }
+
+inline Result<ReferenceType> MemoryManager::Insert(addr_t addr, uint32_t offset,
+                                                   ReferenceType value) {
+  auto vaddr = TranslateAddress(addr);
+}
+
+inline Result<ReferenceType> MemoryManager::Access(addr_t addr,
+                                                   uint32_t offset) {}
 
 }  // namespace dlvm

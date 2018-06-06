@@ -19,27 +19,27 @@ using namespace std::placeholders;
 using vaddr_t = uint64_t;
 using addr_t = uint32_t;
 
-using array_t = uint32_t;
+using array_t = uint32_t;  // length of an array
 using VType = variant<int64_t, uint64_t, double, bool, char, addr_t>;
 using RType = variant<array_t, VType>;
 
 struct ValueType;
 struct ReferenceType;
 
-template <typename Type>
-struct Result;
+template <typename T1, typename T2 = T1, typename R = T1>
+class Result;
 
 typedef enum type_e {
   NIL,
-  INTEGER,
   UINTEGER,
+  INTEGER,
   FLOAT,
   BOOL,
   STRING,
   ARRAY,
-  REFERENCE,
-  STRUCT,
-  CLOSURE
+  PTR,
+  NATIVE_PTR,
+  CLOSURE,
 } type_t;
 
 typedef enum { ADDOP, SUBOP, MULOP } ArithmeticOperator;
@@ -70,66 +70,63 @@ struct ReferenceType {
   Result<ValueType> Unbox();
 };
 
-template <typename Type>
-struct Result {
-  result_t rtype;
-  variant<Error, Type> result;
+template <typename T1, typename T2, typename R>
+class Result {
+  result_t m_rtype;
+  variant<Error, T1> m_result;
 
-  Result(result_t rtype, variant<Error, Type> result)
-      : rtype{rtype}, result{result} {}
+ public:
+  Result(result_t rtype, variant<Error, T1> result)
+      : m_rtype{rtype}, m_result{result} {}
 
-  bool isError() { return rtype == ERROR; }
-  bool isType() { return rtype == OK; }
+  result_t ResultType() { return m_rtype; };
+  variant<Error, T1> Read() { return m_result; };
+
+  Result<R> Apply(function<Result<R>(T1)> f);
+  Result<R> ZipWith(function<Result<R>(T1, T2)> f, Result<T2> other);
 };
 
-template <typename RType, typename PType>
-Result<RType> MapResult(function<Result<RType>(PType)> f, Result<PType> r);
-
-/*
-template <typename RType, typename PType, typename OType>
-Result<RType> MapResult2(function<Result<RType>(PType, OType)> f,
-                         Result<PType> r1, Result<OType> r2);
-*/
-
-template <typename Type>
-Result<Type> LiftError(ErrorCode error_code, string msg) {
-  return Result<Type>{ERROR, Error{error_code, msg}};
+template <typename T>
+Result<T> LiftError(ErrorCode error_code, string msg) {
+  return Result<T>{ERROR, Error{error_code, msg}};
 }
 
-template <typename Type>
-Result<Type> LiftType(Type t) {
-  return Result<Type>{OK, t};
+template <typename T>
+Result<T> LiftType(T t) {
+  return Result<T>{OK, t};
 }
 
-template <typename RType, typename PType>
-Result<RType> MapResult(function<Result<RType>(PType, PType)> f,
-                        Result<PType> r) {
-  switch (r.rtype) {
+template <typename T1, typename T2, typename R>
+Result<R> Result<T1, T2, R>::Apply(function<Result<R>(T1)> f) {
+  switch (this->ResultType()) {
     case ERROR:
-      return LiftError<RType>(INVALID_ARGUMENT, "");
+      return *this;
     case OK:
-      return f(r);
+      return f(get<T2>(this->Read()));
+    default:
+      return LiftError<R>(INVALID_ARGUMENT, "");
   }
 }
 
-template <typename RType, typename PType, typename OType>
-Result<RType> MapResult2(function<Result<RType>(PType, OType)> f,
-                         Result<PType> r1, Result<OType> r2) {
-  switch (r1.rtype) {
+template <typename T1, typename T2, typename R>
+struct ZipWithFunctor {
+  T1 r1;
+  function<Result<R>(T1, T2)> f;
+  ZipWithFunctor(function<Result<R>(T1, T2)> f, T1 r1) : r1{r1}, f{f} {}
+
+  Result<R> operator()(T2 r2) { return f(r1, r2); }
+};
+
+template <typename T1, typename T2, typename R>
+Result<R> Result<T1, T2, R>::ZipWith(function<Result<R>(T1, T2)> f,
+                                     Result<T2> other) {
+  switch (this->ResultType()) {
     case ERROR:
-      return r1;
+      return *this;
     case OK:
-      switch (r2.rtype) {
-        case ERROR:
-          return r2;
-        case OK:
-          return f(get<PType>(r1.result), get<OType>(r2.result));
-        default:
-          return LiftError<RType>(INVALID_ARGUMENT, "");
-      }
-      break;
+      return other.Apply(ZipWithFunctor<T1, T2, R>{f, get<T1>(this->Read())});
     default:
-      return LiftError<RType>(INVALID_ARGUMENT, "");
+      return LiftError<R>(INVALID_ARGUMENT, "");
   }
 }
 
@@ -166,9 +163,9 @@ Result<ValueType> Arithmetic(ArithmeticOperator op, T v1, ValueType v2,
   }
 }
 
-struct Arithmetic2 {
+struct ArithmeticFunctor {
   ArithmeticOperator op;
-  Arithmetic2(ArithmeticOperator op) : op{op} {}
+  ArithmeticFunctor(ArithmeticOperator op) : op{op} {}
   Result<ValueType> operator()(ValueType v1, ValueType v2) {
     switch (v1.type) {
       case INTEGER:
@@ -182,5 +179,9 @@ struct Arithmetic2 {
     }
   }
 };
+
+auto ArithmeticAdd = ArithmeticFunctor{ADDOP};
+auto ArithmeticSub = ArithmeticFunctor{SUBOP};
+auto ArithmeticMul = ArithmeticFunctor{MULOP};
 
 }  // namespace dlvm

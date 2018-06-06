@@ -12,29 +12,59 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
-struct NativeFunction {
-  uint8_t argc;
-  RType (*NFunc)(uint8_t, unique_ptr<RType[]>);
+typedef enum { NATIVE, MANAGED } FunctionType;
 
-  NativeFunction(uint8_t argc, unique_ptr<RType[]> args,
-                 RType (*func)(uint8_t, unique_ptr<RType[]>))
-      : argc{argc} {
-    NFunc = func;
+class NativeFunction {
+  uint8_t m_argc;
+  string m_handle;
+
+  NativeFunction(uint8_t argc, string handle)
+      : m_argc{argc}, m_handle{handle} {}
+
+ public:
+  Result<ReferenceType> Invoke();
+};
+
+class ManagedFunction {
+  uint8_t m_argc;
+  addr_t m_address;
+
+ public:
+  Result<ReferenceType> Invoke();
+};
+
+class Function {
+  FunctionType m_ftype;
+  variant<NativeFunction, ManagedFunction> m_function;
+
+  Function(FunctionType ftype,
+           variant<NativeFunction, ManagedFunction> function)
+      : m_ftype{ftype}, m_function{function} {}
+
+ public:
+  Result<ReferenceType> Invoke() {
+    switch (m_ftype) {
+      case NATIVE:
+        return get<NativeFunction>(m_function).Invoke();
+      default:
+        return LiftError<ReferenceType>(INVALID_ARGUMENT, "");
+    }
   }
-
-  void Invoke();
 };
 
-struct ManagedFunction {
-  uint8_t argc;
-  addr_t Start;
+struct Library {
+  string Name;
+  vector<string> Handles;
 };
-
-typedef variant<NativeFunction, ManagedFunction> Function;
 
 class FunctionTable {
+  Library m_libraries;
+  vector<Function> m_functions;
+
+  FunctionTable() {}
+
  public:
-  unique_ptr<vector<Function>> FunctionTable;
+  void Load();
 };
 
 }  // namespace dlvm
