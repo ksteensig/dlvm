@@ -1,4 +1,3 @@
-#include "interpreter.hpp"
 #include "type.hpp"
 
 using namespace dlvm;
@@ -6,18 +5,18 @@ using namespace std;
 using namespace std::placeholders;
 
 int main() {
-  /*
-VType v1 = 1.1;
-VType v2 = (uint64_t)6;
+  VType v1 = 1.1;
+  VType v2 = (uint64_t)6;
 
-ValueType vt1{FLOAT, v1};
-ValueType vt2{UINTEGER, v2};
+  ValueType vt1{FLOAT, v1};
+  ValueType vt2{UINTEGER, v2};
 
-Result<ValueType> r1 = LiftType(vt1);
-Result<ValueType> r2 = LiftType(vt2);
+  Result<ValueType> r1 = ReturnOk(vt1);
+  Result<ValueType> r2 = ReturnOk(vt2);
 
-Result<ValueType> r3 = r1.ZipWith(ArithmeticAdd, r2);
-*/
+  Result<ValueType> r3 =
+      r1.template ZipWith<ValueType, ValueType>(ArithmeticAdd, r2);
+
   // cout << get<double>(get<ValueType>(r3.result).Value) << endl;
 
   /*

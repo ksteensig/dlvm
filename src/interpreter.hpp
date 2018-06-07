@@ -9,7 +9,6 @@
 #include "function.hpp"
 #include "opcode.hpp"
 #include "type.hpp"
-#include "vmm.hpp"
 
 namespace dlvm {
 
@@ -17,7 +16,7 @@ using namespace std;
 using namespace dlvm;
 
 class Interpreter {
-  MemoryManager Memory;
+  // MemoryManager Memory;
 
   unique_ptr<vector<uint8_t>> Program;
   uint64_t pc = 0;
@@ -45,10 +44,11 @@ class Interpreter {
   Result<ValueType> Return();
 
  public:
-  Interpreter(unique_ptr<vector<uint8_t>> program,
-              map<string, uint32_t> settings)
-      : Program{move(program)}, Memory{MemoryManager{settings}} {}
-
+  /*
+Interpreter(unique_ptr<vector<uint8_t>> program,
+           map<string, uint32_t> settings)
+   : Program{move(program)}, Memory{MemoryManager{settings}} {}
+*/
   void Execute();
 };
 
