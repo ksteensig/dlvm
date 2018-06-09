@@ -7,7 +7,7 @@ using namespace std;
 
 ReferenceType ValueType::Box() { return ReferenceType{type, Value}; }
 
-Result<ValueType> ReferenceType::Unbox() {
+Result<Error, ValueType> ReferenceType::Unbox() {
   switch (type) {
     case ARRAY:
     case STRING:

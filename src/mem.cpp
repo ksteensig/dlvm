@@ -5,7 +5,7 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
-Result<paddr_t> HeapManager::TranslatePAddress(addr_t addr) {
+Result<Error, paddr_t> MemoryManager::TranslatePAddress(addr_t addr) {
   if (addr > m_max_pagetable) {
     return ReturnError<paddr_t>(SEGMENTATION_FAULT, "");
   } else {
@@ -18,70 +18,73 @@ Result<paddr_t> HeapManager::TranslatePAddress(addr_t addr) {
   }
 }
 
-Result<ValueType> HeapManager::Insert(addr_t addr, ValueType value) {
+Result<Error, ValueType> MemoryManager::Insert(addr_t addr, ValueType value) {
   return this->Insert(addr, 0, value);
 }
 
-Result<ValueType> HeapManager::Insert(addr_t addr, uint32_t offset,
-                                      ValueType value) {
-  function<Result<addr_t>(paddr_t)> bounds_check = BoundsCheck{offset};
+Result<Error, ValueType> MemoryManager::Insert(addr_t addr, uint32_t offset,
+                                               ValueType value) {
+  function<Result<Error, addr_t>(paddr_t)> bounds_check = BoundsCheck{offset};
 
-  function<Result<ValueType>(addr_t)> insert =
-      [this, value](addr_t addr) -> Result<ValueType> {
-    this->Heap[addr] = value;
-    return ReturnOk(value);
+  function<Result<Error, ValueType>(addr_t)> insert =
+      [this, value](addr_t addr) -> Result<Error, ValueType> {
+    Heap[addr] = value;
+    return ReturnOk<>(value);
   };
 
-  return TranslatePAddress(addr)
-      .template Apply<>(bounds_check)
-      .template Apply<>(insert);
+  return TranslatePAddress(addr).RightMap(bounds_check).RightMap(insert);
 }
 
-Result<ValueType> HeapManager::Access(addr_t addr) {
+Result<Error, ValueType> MemoryManager::Access(addr_t addr) {
   return this->Access(addr, 0);
 }
 
-Result<ValueType> HeapManager::Access(addr_t addr, uint32_t offset) {
-  function<Result<addr_t>(paddr_t)> bounds_check = BoundsCheck{offset};
+Result<Error, ValueType> MemoryManager::Access(addr_t addr, uint32_t offset) {
+  function<Result<Error, addr_t>(paddr_t)> bounds_check = BoundsCheck{offset};
 
-  function<Result<ValueType>(addr_t)> access =
-      [this](addr_t addr) -> Result<ValueType> {
+  function<Result<Error, ValueType>(addr_t)> access =
+      [this](addr_t addr) -> Result<Error, ValueType> {
     return this->Heap[addr].Unbox();
   };
 
-  return TranslatePAddress(addr)
-      .template Apply<>(bounds_check)
-      .template Apply<>(access);
+  return TranslatePAddress(addr).RightMap(bounds_check).RightMap(access);
 }
 
-Result<addr_t> HeapManager::Malloc(uint32_t size) {
-  // GarbageCollect();
-  function<Result<uint32_t>(uint32_t)> bounds_check =
-      [this](uint32_t size) -> Result<uint32_t> {
-    if (size + m_heap_alloc > heap_ptr) {
-      return ReturnError<uint32_t>(OUT_OF_MEMORY,
-                                   "Cannot allocate requested memory");
-    } else {
-      return ReturnOk(size);
-    }
-  };
+Result<Error, addr_t> MemoryManager::Malloc(uint32_t size) {
+  function<Result<pair<Error, uint32_t>, uint32_t>(uint32_t)> bounds_check =
+      [this](uint32_t size) {
+        if (size + m_heap_alloc > heap_ptr) {
+          return ReturnLeft <
+                 Result<pair<Error, uint32_t>>(make_pair(
+                     Error{OUT_OF_MEMORY, "Cannot allocate Heap"}, size));
+        } else {
+          return ReturnRight<Error, uint32_t>(size);
+        }
+      };
 
-  function<Result<addr_t>(uint32_t)> allocate =
-      [this](uint32_t size) -> Result<addr_t> {
+  function<Result<Error, uint32_t>(uint32_t)> gc =
+      [this](pair<Error, uint32_t> p) {
+        this->GarbageCollect();
+        auto [e, size] = p;
+        return ReturnOk<uint32_t>(size);
+      };
+
+  function<Result<Error, addr_t>(uint32_t)> allocate = [this](uint32_t size) {
     for (addr_t i = 0; i < m_pagetable_alloc; i++) {
       if (!PageTable[i].has_value()) {
         PageTable[i] = make_optional(make_pair(i, size));
       }
-
-      return ReturnOk(i);
+      return ReturnOk<addr_t>(i);
     }
-
     return ReturnError<addr_t>(OUT_OF_MEMORY, "Out of address space");
   };
 
-  return ReturnOk(size)
-      .template Apply<>(bounds_check)
-      .template Apply<>(allocate);
+  return ReturnOk<>(size)
+      .RightMap(bounds_check)
+      .template LeftMap<>(gc)
+      .RightMap(allocate);
 }
+
+void GarbageCollect() { return; }
 
 }  // namespace dlvm

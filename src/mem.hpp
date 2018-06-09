@@ -22,51 +22,49 @@ using paddr_t = pair<addr_t, allocated_t>;
 struct BoundsCheck {
   uint32_t offset;
   BoundsCheck(uint32_t offset) : offset{offset} {}
-  Result<addr_t> operator()(paddr_t paddr) {
-    if (get<1>(paddr) > offset + 1) {
+  Result<Error, addr_t> operator()(paddr_t paddr) {
+    auto [addr, allocated] = paddr;
+    if (allocated > offset + 1) {
       return ReturnError<addr_t>(SEGMENTATION_FAULT, "");
     } else {
-      return ReturnOk(get<0>(paddr) + offset);
+      return ReturnOk<>(addr + offset);
     }
   }
 };
 
-class HeapManager {
-  addr_t m_heap_alloc = 8192;
-  addr_t m_max_heap = 8192;
+class MemoryManager {
   addr_t m_max_pagetable = 8192;
   addr_t m_pagetable_alloc = 8192;
-  addr_t heap_ptr = 0;
-
-  unique_ptr<ReferenceType[]> Heap;
-  unique_ptr<optional<paddr_t>[]> PageTable;
-
-  Result<paddr_t> TranslatePAddress(addr_t addr);
-
- public:
-  HeapManager()
-      : Heap{make_unique<ReferenceType[]>(m_max_heap)},
-        PageTable{make_unique<optional<paddr_t>[]>(m_max_pagetable)} {}
-
-  Result<ValueType> Insert(addr_t addr, uint32_t offset, ValueType value);
-  Result<ValueType> Insert(addr_t addr, ValueType value);
-  Result<ValueType> Access(addr_t addr, uint32_t offset);
-  Result<ValueType> Access(addr_t addr);
-
-  Result<addr_t> Malloc(uint32_t size);
-};
-
-class StackManager {
+  addr_t m_heap_alloc = 8192;
+  addr_t m_max_heap = 8192;
   addr_t m_max_stack = 4096;
   addr_t m_stack_alloc = 4096;
 
+  addr_t heap_ptr = 0;
+  addr_t stack_ptr = 0;
+
+  unique_ptr<optional<paddr_t>[]> PageTable;
+  unique_ptr<ReferenceType[]> Heap;
   unique_ptr<ValueType[]> Stack;
 
- public:
-  StackManager() : Stack{make_unique<ValueType[]>(m_max_stack)} {}
+  Result<Error, paddr_t> TranslatePAddress(addr_t addr);
 
-  Result<ValueType> Push(ValueType value);
-  Result<ValueType> Pop();
+  // return memory freed
+  void GarbageCollect();
+
+ public:
+  MemoryManager() {}
+
+  Result<Error, ValueType> Insert(addr_t addr, uint32_t offset,
+                                  ValueType value);
+  Result<Error, ValueType> Insert(addr_t addr, ValueType value);
+  Result<Error, ValueType> Access(addr_t addr, uint32_t offset);
+  Result<Error, ValueType> Access(addr_t addr);
+
+  Result<Error, addr_t> Malloc(uint32_t size);
+
+  Result<Error, ValueType> Push(ValueType value);
+  Result<Error, ValueType> Pop();
 };
 
 }  // namespace dlvm

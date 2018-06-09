@@ -11,11 +11,10 @@ int main() {
   ValueType vt1{FLOAT, v1};
   ValueType vt2{UINTEGER, v2};
 
-  Result<ValueType> r1 = ReturnOk(vt1);
-  Result<ValueType> r2 = ReturnOk(vt2);
+  auto r1 = ReturnOk(vt1);
+  auto r2 = ReturnOk(vt2);
 
-  Result<ValueType> r3 =
-      r1.template ZipWith<ValueType, ValueType>(ArithmeticAdd, r2);
+  auto r3 = r1.template RightZip<ValueType, ValueType>(ArithmeticAdd, r2);
 
   // cout << get<double>(get<ValueType>(r3.result).Value) << endl;
 
