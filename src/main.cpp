@@ -1,4 +1,5 @@
-#include "native.hpp"
+#include <cstddef>
+#include "function.hpp"
 #include "type.hpp"
 
 using namespace dlvm;
@@ -15,7 +16,13 @@ int main() {
   auto r1 = ReturnOk(vt1);
   auto r2 = ReturnOk(vt2);
 
-  auto r3 = r1.RightZip(ArithmeticAdd, r2);
+  // auto r3 = r1.RightZip(ArithmeticAdd, r2);
+
+  FunctionTable ft;
+
+  ft.Load("./libtest.so", "test_func");
+
+  get<0>(ft.m_functions.at(0).m_function).func(NULL);
 
   // cout << get<double>(get<ValueType>(r3.result).Value) << endl;
 

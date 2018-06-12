@@ -1,13 +1,15 @@
 #include "function.hpp"
 
+#include <dlfcn.h>
+#include <cstddef>
+#include <iostream>
+
 namespace dlvm {
 
 using namespace dlvm;
 using namespace std;
 
-Result<Error, bool> FunctionTable::Load(pair<string, string> so_and_handle) {
-  auto [so_name, handle] = so_and_handle;
-
+Result<Error, bool> FunctionTable::Load(string so_name, string handle) {
   NativeFunction nfunc;
   SharedObject obj;
 
@@ -23,6 +25,7 @@ Result<Error, bool> FunctionTable::Load(pair<string, string> so_and_handle) {
   void* handle_ref = dlsym(obj.Library, handle.c_str());
 
   if (!handle_ref) {
+    cout << "fug" << endl;
     return ReturnError<bool>(INVALID_ARGUMENT,
                              "Function " + handle + " could not be found");
   }

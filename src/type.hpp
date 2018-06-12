@@ -269,11 +269,12 @@ struct ArithmeticFunctor {
   }
 };
 
-function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticAdd =
-    ArithmeticFunctor{ADDOP};
+// function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticAdd =
+//    ArithmeticFunctor{ADDOP};
+/*
 function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticSub =
-    ArithmeticFunctor{SUBOP};
+ArithmeticFunctor{SUBOP};
 function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticMul =
-    ArithmeticFunctor{MULOP};
-
+ArithmeticFunctor{MULOP};
+*/
 }  // namespace dlvm

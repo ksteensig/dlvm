@@ -1,7 +1,9 @@
 #pragma once
 
 #include <dlfcn.h>
+#include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <memory>
 #include <variant>
 #include <vector>
@@ -26,11 +28,11 @@ struct ManagedFunction {
   Result<Error, ReferenceType> Invoke();
 };
 
-class Function {
+struct Function {
   FunctionType m_ftype;
   variant<NativeFunction, ManagedFunction> m_function;
 
- public:
+  // public:
   Function(FunctionType ftype,
            variant<NativeFunction, ManagedFunction> function)
       : m_ftype{ftype}, m_function{function} {}
@@ -48,20 +50,19 @@ Result<Error, ReferenceType> Invoke() {
 
 // .so file
 struct SharedObject {
-  void* Library;
+  void *Library;
   string Name;
   vector<string> Handles;
 };
 
-class FunctionTable {
+struct FunctionTable {
   vector<SharedObject> m_objects;
   vector<Function> m_functions;
 
   FunctionTable() {}
 
- public:
   // false if function already has been loaded
-  Result<Error, bool> Load(pair<string, string> so_and_handle);
+  Result<Error, bool> Load(string so_name, string handle);
 };
 
 }  // namespace dlvm
