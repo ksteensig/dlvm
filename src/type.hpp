@@ -17,8 +17,8 @@ using namespace std;
 using namespace std::placeholders;
 
 using addr_t = uint32_t;
-
 using VType = variant<int64_t, uint64_t, double, bool, char, addr_t>;
+using NativeFunc = void* (*)(void*);
 
 struct ValueType;
 struct ReferenceType;
@@ -80,20 +80,24 @@ class Result {
   result_t ResultType() { return m_rtype; };
   variant<E, T> Read() { return m_result; };
 
-  template <typename R = T>
-  Result<E, R> RightMap(function<Result<E, R>(T)> f);
+  template <typename L = E, typename R = T>
+  Result<L, R> RightMap(function<Result<L, R>(T)> f);
 
-  template <typename R = E>
-  Result<R, E> LeftMap(function<Result<R, T>(E)> f);
+  template <typename L = E, typename R = T>
+  Result<L, R> LeftMap(function<Result<L, R>(E)> f);
 
-  template <typename U = E, typename R = T>
-  Result<U, R> Then(function<Result<U, R>(void)> f);
+  template <typename L = E, typename R = T>
+  Result<L, R> Then(function<Result<L, R>(void)> f);
 
-  template <typename U = T, typename R = T>
-  Result<E, R> RightZip(function<Result<E, R>(T, U)> f, Result<E, U> other);
+  template <typename L = E, typename R = T>
+  Result<L, R> IfLeftElseRight(function<Result<L, R>(E)> l,
+                               function<Result<L, R>(T)> r);
 
-  template <typename U = E, typename R = E>
-  Result<R, T> LeftZip(function<Result<R, T>(E, U)> f, Result<E, U> other);
+  template <typename L = E, typename R = T, typename U = L, typename V = R>
+  Result<L, R> RightZip(function<Result<L, R>(T, V)> f, Result<U, V> other);
+
+  template <typename L = E, typename R = T, typename U = L, typename V = R>
+  Result<L, R> LeftZip(function<Result<L, R>(E, U)> f, Result<U, V> other);
 };
 
 template <typename E, typename T>
@@ -117,61 +121,81 @@ Result<Error, T> ReturnOk(T t) {
 }
 
 template <typename E, typename T>
-template <typename R>
-Result<E, R> Result<E, T>::RightMap(function<Result<E, R>(T)> f) {
+template <typename L, typename R>
+Result<L, R> Result<E, T>::RightMap(function<Result<L, R>(T)> f) {
   switch (this->ResultType()) {
     case RIGHT:
       return f(get<T>(this->Read()));
     case LEFT:
     default:
-      return ReturnLeft<E, R>(get<0>(this->Read()));
+      return ReturnLeft<L, R>(get<E>(this->Read()));
   }
 }
 
 template <typename E, typename T>
-template <typename R>
-Result<R, E> Result<E, T>::LeftMap(function<Result<R, T>(E)> f) {
+template <typename L, typename R>
+Result<L, R> Result<E, T>::LeftMap(function<Result<L, R>(E)> f) {
   switch (this->ResultType()) {
     case LEFT:
       return f(get<E>(this->Read()));
     case RIGHT:
     default:
-      return ReturnLeft<R, T>(get<1>(this->Read()));
+      return ReturnRight<L, R>(get<T>(this->Read()));
   }
 }
 
 template <typename E, typename T>
-template <typename U, typename R>
-Result<U, R> Result<E, T>::Then(function<Result<U, R>(void)> f) {
+template <typename L, typename R>
+Result<L, R> Result<E, T>::IfLeftElseRight(function<Result<L, R>(E)> l,
+                                           function<Result<L, R>(T)> r) {
+  switch (this->ResultType()) {
+    case LEFT:
+      return l(get<E>(this->Read()));
+    case RIGHT:
+    default:
+      return r(get<T>(this->Read()));
+  }
+}
+
+template <typename U, typename E, typename T, typename R>
+function<Result<E, R>(U)> RightCompose(function<Result<E, T>(U)> f1,
+                                       function<Result<E, R>(T)> f2) {
+  function<Result<E, R>(U)> f = [f1, f2](U u) { return f1(u).RightMap(f2); };
+  return f;
+}
+
+template <typename U, typename E, typename T, typename R>
+function<Result<E, R>(U)> LeftCompose(function<Result<E, T>(U)> f1,
+                                      function<Result<E, R>(E)> f2) {
+  function<Result<E, R>(U)> f = [f1, f2](U u) { return f1(u).LeftMap(f2); };
+  return f;
+}
+
+template <typename E, typename T>
+template <typename L, typename R>
+Result<L, R> Result<E, T>::Then(function<Result<L, R>(void)> f) {
   return f();
 }
 
-template <typename E, typename T, typename U, typename R>
-struct ZipRightFunctor {
+template <typename L, typename R, typename T, typename U>
+struct ZipFunctor {
   T r1;
-  function<Result<E, R>(T, U)> f;
-  ZipRightFunctor(function<Result<E, R>(T, U)> f, T r1) : r1{r1}, f{f} {}
+  function<Result<L, R>(T, U)> f;
+  ZipFunctor(function<Result<L, R>(T, U)> f, T r1) : r1{r1}, f{f} {}
 
-  Result<E, R> operator()(U r2) { return f(r1, r2); }
-};
-
-template <typename E, typename T, typename U, typename R>
-struct ZipLeftFunctor {
-  E r1;
-  function<Result<R, T>(E, U)> f;
-  ZipLeftFunctor(function<Result<E, R>(T, U)> f, T r1) : r1{r1}, f{f} {}
-
-  Result<R, E> operator()(U r2) { return f(r1, r2); }
+  Result<L, R> operator()(U r2) { return f(r1, r2); }
 };
 
 template <typename E, typename T>
-template <typename U, typename R>
-Result<E, R> Result<E, T>::RightZip(function<Result<E, R>(T, U)> f,
-                                    Result<E, U> other) {
+template <typename L, typename R, typename U, typename V>
+Result<L, R> Result<E, T>::RightZip(function<Result<L, R>(T, V)> f,
+                                    Result<U, V> other) {
   switch (this->ResultType()) {
-    case RIGHT:
-      return other.template RightMap<R>(
-          ZipRightFunctor<E, T, U, R>{f, get<T>(this->Read())});
+    case RIGHT: {
+      function<Result<L, R>(T)> zf =
+          ZipFunctor<L, R, T, V>{f, get<T>(this->Read())};
+      return other.template RightMap<L, R>(zf);
+    }
     case LEFT:
     default:
       return *this;
@@ -179,13 +203,14 @@ Result<E, R> Result<E, T>::RightZip(function<Result<E, R>(T, U)> f,
 }
 
 template <typename E, typename T>
-template <typename U, typename R>
-Result<R, T> Result<E, T>::LeftZip(function<Result<R, T>(E, U)> f,
-                                   Result<E, U> other) {
+template <typename L, typename R, typename U, typename V>
+Result<L, R> Result<E, T>::LeftZip(function<Result<L, R>(E, U)> f,
+                                   Result<U, V> other) {
   switch (this->ResultType()) {
     case LEFT:
-      return other.template LeftMap<R>(
-          ZipLeftFunctor<T, E, U, R>{f, get<E>(this->Read())});
+      function<Result<L, R>(E)> zf =
+          ZipFunctor<L, R, E, U>{f, get<E>(this->Read())};
+      return other.template LeftMap<L, R>(zf);
     case RIGHT:
     default:
       return *this;
@@ -244,8 +269,11 @@ struct ArithmeticFunctor {
   }
 };
 
-auto ArithmeticAdd = ArithmeticFunctor{ADDOP};
-auto ArithmeticSub = ArithmeticFunctor{SUBOP};
-auto ArithmeticMul = ArithmeticFunctor{MULOP};
+function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticAdd =
+    ArithmeticFunctor{ADDOP};
+function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticSub =
+    ArithmeticFunctor{SUBOP};
+function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticMul =
+    ArithmeticFunctor{MULOP};
 
 }  // namespace dlvm

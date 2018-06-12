@@ -18,73 +18,58 @@ Result<Error, paddr_t> MemoryManager::TranslatePAddress(addr_t addr) {
   }
 }
 
-Result<Error, ValueType> MemoryManager::Insert(addr_t addr, ValueType value) {
-  return this->Insert(addr, 0, value);
-}
-
 Result<Error, ValueType> MemoryManager::Insert(addr_t addr, uint32_t offset,
                                                ValueType value) {
-  function<Result<Error, addr_t>(paddr_t)> bounds_check = BoundsCheck{offset};
-
   function<Result<Error, ValueType>(addr_t)> insert =
       [this, value](addr_t addr) -> Result<Error, ValueType> {
     Heap[addr] = value;
-    return ReturnOk<>(value);
+    return ReturnOk<ValueType>(value);
   };
 
-  return TranslatePAddress(addr).RightMap(bounds_check).RightMap(insert);
-}
-
-Result<Error, ValueType> MemoryManager::Access(addr_t addr) {
-  return this->Access(addr, 0);
+  return TranslatePAddress(addr)
+      .RightMap(static_cast<function<Result<Error, addr_t>(paddr_t)>>(
+          PageTableBoundsCheck{offset}))
+      .RightMap(insert);
 }
 
 Result<Error, ValueType> MemoryManager::Access(addr_t addr, uint32_t offset) {
-  function<Result<Error, addr_t>(paddr_t)> bounds_check = BoundsCheck{offset};
-
-  function<Result<Error, ValueType>(addr_t)> access =
-      [this](addr_t addr) -> Result<Error, ValueType> {
-    return this->Heap[addr].Unbox();
-  };
-
-  return TranslatePAddress(addr).RightMap(bounds_check).RightMap(access);
+  return TranslatePAddress(addr)
+      .RightMap(static_cast<function<Result<Error, addr_t>(paddr_t)>>(
+          PageTableBoundsCheck{offset}))
+      .RightMap(static_cast<function<Result<Error, ValueType>(addr_t)>>(
+          [this](addr_t addr) { return this->Heap[addr].Unbox(); }));
 }
 
 Result<Error, addr_t> MemoryManager::Malloc(uint32_t size) {
-  function<Result<pair<Error, uint32_t>, uint32_t>(uint32_t)> bounds_check =
+  function<Result<Error, uint32_t>(uint32_t)> bounds_check =
       [this](uint32_t size) {
-        if (size + m_heap_alloc > heap_ptr) {
-          return ReturnLeft <
-                 Result<pair<Error, uint32_t>>(make_pair(
-                     Error{OUT_OF_MEMORY, "Cannot allocate Heap"}, size));
-        } else {
-          return ReturnRight<Error, uint32_t>(size);
-        }
+        return HeapBoundsCheck{this->m_max_heap, this->heap_ptr}(size);
       };
 
-  function<Result<Error, uint32_t>(uint32_t)> gc =
-      [this](pair<Error, uint32_t> p) {
-        this->GarbageCollect();
-        auto [e, size] = p;
-        return ReturnOk<uint32_t>(size);
-      };
-
-  function<Result<Error, addr_t>(uint32_t)> allocate = [this](uint32_t size) {
-    for (addr_t i = 0; i < m_pagetable_alloc; i++) {
-      if (!PageTable[i].has_value()) {
-        PageTable[i] = make_optional(make_pair(i, size));
-      }
-      return ReturnOk<addr_t>(i);
-    }
-    return ReturnError<addr_t>(OUT_OF_MEMORY, "Out of address space");
+  function<Result<Error, uint32_t>(Error)> gc = [this](Error _) {
+    return this->GarbageCollect();
   };
 
-  return ReturnOk<>(size)
+  function<Result<Error, addr_t>(uint32_t)> allocate = [this](uint32_t size) {
+    for (addr_t i = 0; i < m_max_pagetable; i++) {
+      if (!this->PageTable[i].has_value()) {
+        this->PageTable[i] = make_optional(make_pair(i, size));
+        return ReturnOk<addr_t>(i);
+      }
+    }
+    return ReturnError<addr_t>(OUT_OF_MEMORY, "Page table is out of space");
+  };
+
+  function<Result<Error, uint32_t>(uint32_t)> lift_size =
+      [this, size](uint32_t _) { return ReturnOk(size); };
+
+  return lift_size(size)
       .RightMap(bounds_check)
-      .template LeftMap<>(gc)
+      .IfLeftElseRight(RightCompose(gc, RightCompose(lift_size, bounds_check)),
+                       lift_size)
       .RightMap(allocate);
 }
 
-void GarbageCollect() { return; }
+Result<Error, uint32_t> GarbageCollect() { return ReturnOk<uint32_t>(0); }
 
 }  // namespace dlvm

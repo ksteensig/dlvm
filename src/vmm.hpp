@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -24,7 +25,7 @@ class MemoryManager {
 
   unique_ptr<ValueType[]> Stack;
   unique_ptr<ReferenceType[]> Heap;
-  unique_ptr<vaddr_t[]> PageTable;
+  unique_ptr<array<vaddr_t>> PageTable;
 
   template <class T>
   void Grow(unique_ptr<T[]> array, uint32_t curr_size, uint32_t new_size);

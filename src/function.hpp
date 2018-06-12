@@ -1,5 +1,6 @@
 #pragma once
 
+#include <dlfcn.h>
 #include <cstdint>
 #include <memory>
 #include <variant>
@@ -14,57 +15,53 @@ using namespace std;
 
 typedef enum { NATIVE, MANAGED } FunctionType;
 
-class NativeFunction {
-  uint8_t m_argc;
-  string m_handle;
-
-  NativeFunction(uint8_t argc, string handle)
-      : m_argc{argc}, m_handle{handle} {}
-
- public:
-  Result<ReferenceType> Invoke();
+struct NativeFunction {
+  NativeFunc func;
+  Result<Error, ReferenceType> Invoke();
 };
 
-class ManagedFunction {
+struct ManagedFunction {
   uint8_t m_argc;
   addr_t m_address;
-
- public:
-  Result<ReferenceType> Invoke();
+  Result<Error, ReferenceType> Invoke();
 };
 
 class Function {
   FunctionType m_ftype;
   variant<NativeFunction, ManagedFunction> m_function;
 
+ public:
   Function(FunctionType ftype,
            variant<NativeFunction, ManagedFunction> function)
       : m_ftype{ftype}, m_function{function} {}
-
- public:
-  Result<ReferenceType> Invoke() {
-    switch (m_ftype) {
-      case NATIVE:
-        return get<NativeFunction>(m_function).Invoke();
-      default:
-        return LiftError<ReferenceType>(INVALID_ARGUMENT, "");
-    }
-  }
+  /*
+Result<Error, ReferenceType> Invoke() {
+ switch (m_ftype) {
+   case NATIVE:
+     return ReturnOk(get<NativeFunction>(m_function).Invoke());
+   default:
+     return ReturnError<ReferenceType>(INVALID_ARGUMENT, "");
+ }
+}
+*/
 };
 
-struct Library {
+// .so file
+struct SharedObject {
+  void* Library;
   string Name;
   vector<string> Handles;
 };
 
 class FunctionTable {
-  Library m_libraries;
+  vector<SharedObject> m_objects;
   vector<Function> m_functions;
 
   FunctionTable() {}
 
  public:
-  void Load();
+  // false if function already has been loaded
+  Result<Error, bool> Load(pair<string, string> so_and_handle);
 };
 
 }  // namespace dlvm

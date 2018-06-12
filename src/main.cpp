@@ -1,3 +1,4 @@
+#include "native.hpp"
 #include "type.hpp"
 
 using namespace dlvm;
@@ -14,7 +15,7 @@ int main() {
   auto r1 = ReturnOk(vt1);
   auto r2 = ReturnOk(vt2);
 
-  auto r3 = r1.template RightZip<ValueType, ValueType>(ArithmeticAdd, r2);
+  auto r3 = r1.RightZip(ArithmeticAdd, r2);
 
   // cout << get<double>(get<ValueType>(r3.result).Value) << endl;
 
