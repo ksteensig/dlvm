@@ -30,18 +30,14 @@ void Interpreter::Execute() {
   }
 }
 
-inline uint8_t Interpreter::Next() { return Program->at(pc++); }
+inline uint8_t Interpreter::Next() { return m_program[pc++]; }
 
 inline uint32_t Interpreter::NextQuad() {
-  uint32_t value = 0;
-
-  for (uint8_t i = 0; i < 4; i++) {
-    value = (value << 8) | Next();
-  }
-
-  return value;
+  return (Next() << 0x18) | (Next() << 0x10) | (Next() << 0x08) | Next();
 }
 
-uint64_t Interpreter::NextWord() { return (NextQuad() << 0x20) | NextQuad(); }
+inline uint64_t Interpreter::NextWord() {
+  return (static_cast<uint64_t>(NextQuad()) << 0x20) | NextQuad();
+}
 
 }  // namespace dlvm

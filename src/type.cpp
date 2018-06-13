@@ -9,9 +9,6 @@ ReferenceType ValueType::Box() { return ReferenceType{type, Value}; }
 
 Result<Error, ValueType> ReferenceType::Unbox() {
   switch (type) {
-    case ARRAY:
-    case STRING:
-      return ReturnError<ValueType>(INVALID_ARGUMENT, "");
     default:
       return ReturnOk(ValueType{type, Value});
   }

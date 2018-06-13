@@ -1,41 +1,34 @@
 #include "function.hpp"
 
-#include <dlfcn.h>
-#include <cstddef>
-#include <iostream>
-
 namespace dlvm {
 
 using namespace dlvm;
 using namespace std;
 
-Result<Error, bool> FunctionTable::Load(string so_name, string handle) {
-  NativeFunction nfunc;
-  SharedObject obj;
+Result<Error, vector<ValueType>> NativeFunction::Invoke(DLVMEnvironment *env) {}
 
-  obj.Name = so_name;
-  obj.Library = dlopen(so_name.c_str(), RTLD_LAZY);
-  obj.Handles.push_back(handle);
-
-  if (!obj.Library) {
-    return ReturnError<bool>(
-        INVALID_ARGUMENT, "Shared object " + so_name + " could not be found");
+Result<Error, vector<ValueType>> NativeFunctionTable::Call(
+    uint32_t index, DLVMEnvironment *env) {
+  if (m_functions.size() > index) {
+    return m_functions[index].Invoke(env);
+  } else {
+    return ReturnError<vector<ValueType>>(OUT_OF_BOUNDS,
+                                          "Calling non-existent function");
   }
+}  // namespace dlvm
 
-  void* handle_ref = dlsym(obj.Library, handle.c_str());
+Result<Error, bool> NativeFunctionTable::Load(string so_name, string handle) {
+  function<Result<Error, bool>(optional<NativeFunc>)> add_func =
+      [this](optional<NativeFunc> nfunc) {
+        if (nfunc.has_value()) {
+          this->m_functions.push_back(NativeFunc{nfunc.value()});
+          return ReturnOk<>(true);
+        } else {
+          return ReturnOk<>(false);
+        }
+      };
 
-  if (!handle_ref) {
-    cout << "fug" << endl;
-    return ReturnError<bool>(INVALID_ARGUMENT,
-                             "Function " + handle + " could not be found");
-  }
-
-  NativeFunc func_ref = (NativeFunc)handle_ref;
-  nfunc.func = func_ref;
-
-  m_functions.push_back(Function{NATIVE, nfunc});
-
-  return ReturnOk(true);
+  return m_library_loader.Load(so_name, handle).RightMap(add_func);
 }
 
 }  // namespace dlvm

@@ -5,8 +5,10 @@
 #include <variant>
 #include <vector>
 
+#include <dlfcn.h>
+#include <cstddef>
+
 #include "mem.hpp"
-#include "type.hpp"
 
 namespace dlvm {
 
@@ -38,6 +40,19 @@ class DLVMEnvironment {
   Result<Error, ValueType> Access(addr_t addr) { return Access(addr, 0); };
 
   Result<Error, addr_t> Malloc(uint32_t size);
+};
+
+// .so file
+struct SharedObject {
+  void *Library;
+  string Name;
+  vector<string> Handles;
+};
+
+struct DynamicLibraryLoader {
+  vector<SharedObject> m_objects;
+  Result<Error, optional<NativeFunc>> Load(string so_name, string handle);
+  Result<Error, NativeFunc> Unload();
 };
 
 }  // namespace dlvm

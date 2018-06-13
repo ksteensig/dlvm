@@ -16,6 +16,7 @@ typedef enum ErrorCode {
   TYPE_ERROR,
   SEGMENTATION_FAULT,
   INVALID_ARGUMENT,
+  DIVISION_BY_ZERO,
   UNKNOWN
 } ErrorCode;
 

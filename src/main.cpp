@@ -1,12 +1,20 @@
 #include <cstddef>
-#include "function.hpp"
-#include "type.hpp"
+#include "interpreter.hpp"
 
 using namespace dlvm;
 using namespace std;
 using namespace std::placeholders;
 
 int main() {
+  function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticAdd =
+      ArithmeticFunctor{ADDOP};
+  function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticSub =
+      ArithmeticFunctor{SUBOP};
+  function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticMul =
+      ArithmeticFunctor{MULOP};
+  function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticDiv =
+      ArithmeticFunctor{DIVOP};
+
   VType v1 = 1.1;
   VType v2 = (uint64_t)6;
 
@@ -16,13 +24,15 @@ int main() {
   auto r1 = ReturnOk(vt1);
   auto r2 = ReturnOk(vt2);
 
-  // auto r3 = r1.RightZip(ArithmeticAdd, r2);
+  auto r3 = r1.RightZip(ArithmeticAdd, r2);
 
-  FunctionTable ft;
+  NativeFunctionTable ft;
 
-  ft.Load("./libtest.so", "test_func");
+  // ft.Load("./libtest.so", "test_func");
 
-  get<0>(ft.m_functions.at(0).m_function).func(NULL);
+  DLVMEnvironment env;
+
+  ft.Call(0, &env);
 
   // cout << get<double>(get<ValueType>(r3.result).Value) << endl;
 

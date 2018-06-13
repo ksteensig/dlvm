@@ -33,14 +33,13 @@ typedef enum type_e {
   INTEGER,
   FLOAT,
   BOOL,
-  STRING,
   ARRAY,
   PTR,
   NATIVE_PTR,
   CLOSURE,
 } type_t;
 
-typedef enum { ADDOP, SUBOP, MULOP } ArithmeticOperator;
+typedef enum { ADDOP, SUBOP, MULOP, DIVOP } ArithmeticOperator;
 typedef enum { LEFT, RIGHT } result_t;
 
 struct ValueType {
@@ -98,6 +97,8 @@ class Result {
 
   template <typename L = E, typename R = T, typename U = L, typename V = R>
   Result<L, R> LeftZip(function<Result<L, R>(E, U)> f, Result<U, V> other);
+
+  Result<Error, void> OnError(Error e);
 };
 
 template <typename E, typename T>
@@ -227,6 +228,12 @@ Result<Error, ValueType> ArithmeticInner(ArithmeticOperator op, T1 v1, T2 v2,
       return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 - v2});
     case MULOP:
       return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 * v2});
+    case DIVOP:
+      if (v2 == 0) {
+        return ReturnError<ValueType>(DIVISION_BY_ZERO, "");
+      } else {
+        return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 / v2});
+      }
     default:
       return ReturnError<ValueType>(INVALID_ARGUMENT, "");
   }
@@ -269,12 +276,4 @@ struct ArithmeticFunctor {
   }
 };
 
-// function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticAdd =
-//    ArithmeticFunctor{ADDOP};
-/*
-function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticSub =
-ArithmeticFunctor{SUBOP};
-function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticMul =
-ArithmeticFunctor{MULOP};
-*/
 }  // namespace dlvm

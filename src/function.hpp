@@ -8,6 +8,7 @@
 #include <variant>
 #include <vector>
 
+#include "native.hpp"
 #include "type.hpp"
 
 namespace dlvm {
@@ -19,50 +20,31 @@ typedef enum { NATIVE, MANAGED } FunctionType;
 
 struct NativeFunction {
   NativeFunc func;
-  Result<Error, ReferenceType> Invoke();
+
+  NativeFunction(NativeFunc func) : func{func} {}
+  Result<Error, vector<ValueType>> Invoke(DLVMEnvironment *env);
 };
 
 struct ManagedFunction {
   uint8_t m_argc;
   addr_t m_address;
-  Result<Error, ReferenceType> Invoke();
 };
 
-struct Function {
-  FunctionType m_ftype;
-  variant<NativeFunction, ManagedFunction> m_function;
-
-  // public:
-  Function(FunctionType ftype,
-           variant<NativeFunction, ManagedFunction> function)
-      : m_ftype{ftype}, m_function{function} {}
-  /*
-Result<Error, ReferenceType> Invoke() {
- switch (m_ftype) {
-   case NATIVE:
-     return ReturnOk(get<NativeFunction>(m_function).Invoke());
-   default:
-     return ReturnError<ReferenceType>(INVALID_ARGUMENT, "");
- }
-}
-*/
+struct ManagedFunctionTable {
+  vector<ManagedFunction> m_functions;
 };
 
-// .so file
-struct SharedObject {
-  void *Library;
-  string Name;
-  vector<string> Handles;
-};
+struct NativeFunctionTable {
+  DynamicLibraryLoader m_library_loader;
+  vector<NativeFunction> m_functions;
 
-struct FunctionTable {
-  vector<SharedObject> m_objects;
-  vector<Function> m_functions;
+  NativeFunctionTable() {}
 
-  FunctionTable() {}
-
+ public:
   // false if function already has been loaded
   Result<Error, bool> Load(string so_name, string handle);
+  Result<Error, bool> Unload();
+  Result<Error, vector<ValueType>> Call(uint32_t index, DLVMEnvironment *env);
 };
 
 }  // namespace dlvm
