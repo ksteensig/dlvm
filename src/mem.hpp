@@ -34,40 +34,41 @@ class MemoryManager {
   shared_ptr<ReferenceType[]> Heap;
   shared_ptr<ValueType[]> Stack;
 
-  Result<Error, paddr_t> TranslatePAddress(addr_t addr);
+  Result<paddr_t> TranslatePAddress(addr_t addr);
 
   struct PageTableBoundsCheck;
   struct HeapBoundsCheck;
 
   // return memory freed, take memory needed
-  Result<Error, uint32_t> GarbageCollect(uint32_t needed);
+  Result<uint32_t> GarbageCollect(uint32_t needed);
   // return memory freed
-  Result<Error, uint32_t> GarbageCollect();
+  Result<uint32_t> GarbageCollect();
 
-  Result<Error, void> OnError(Error e);
+  Result<void> OnError(Error e);
 
  public:
   MemoryManager() {}
 
-  Result<Error, ValueType> Insert(addr_t addr, uint32_t offset,
-                                  ValueType value);
-  Result<Error, ValueType> Insert(addr_t addr, ValueType value) {
-    return Insert(addr, 0, value);
-  };
+  Result<ValueType> Insert(ValueType addr, ValueType offset, ValueType value);
 
-  Result<Error, ValueType> Access(addr_t addr, uint32_t offset);
-  Result<Error, ValueType> Access(addr_t addr) { return Access(addr, 0); };
+  Result<ValueType> Insert(addr_t addr, uint32_t offset, ValueType value);
 
-  Result<Error, addr_t> Malloc(uint32_t size);
+  Result<ValueType> Access(ValueType addr, ValueType offset);
 
-  Result<Error, ValueType> Push(ValueType value);
-  Result<Error, ValueType> Pop();
+  Result<ValueType> Access(addr_t addr, uint32_t offset);
+
+  Result<ValueType> Malloc(ValueType size);
+
+  Result<addr_t> Malloc(uint32_t size);
+
+  Result<ValueType> Push(ValueType value);
+  Result<ValueType> Pop();
 };
 
 struct MemoryManager::PageTableBoundsCheck {
   uint32_t offset;
   PageTableBoundsCheck(uint32_t offset) : offset{offset} {}
-  Result<Error, addr_t> operator()(paddr_t paddr) {
+  Result<addr_t> operator()(paddr_t paddr) {
     auto [addr, allocated] = paddr;
     if (allocated > offset + 1) {
       return ReturnError<addr_t>(SEGMENTATION_FAULT, "");
@@ -82,7 +83,7 @@ struct MemoryManager::HeapBoundsCheck {
   uint32_t heap_ptr;
   HeapBoundsCheck(uint32_t max_heap, uint32_t heap_ptr)
       : max_heap{max_heap}, heap_ptr{heap_ptr} {}
-  Result<Error, uint32_t> operator()(uint32_t offset) {
+  Result<uint32_t> operator()(uint32_t offset) {
     if (max_heap > heap_ptr + offset) {
       return ReturnError<uint32_t>(OUT_OF_MEMORY, "Cannot allocate Heap");
 

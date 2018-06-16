@@ -5,7 +5,7 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
-Result<Error, paddr_t> MemoryManager::TranslatePAddress(addr_t addr) {
+Result<paddr_t> MemoryManager::TranslatePAddress(addr_t addr) {
   if (addr > m_max_pagetable) {
     return ReturnError<paddr_t>(SEGMENTATION_FAULT, "");
   } else {
@@ -18,39 +18,38 @@ Result<Error, paddr_t> MemoryManager::TranslatePAddress(addr_t addr) {
   }
 }
 
-Result<Error, ValueType> MemoryManager::Insert(addr_t addr, uint32_t offset,
-                                               ValueType value) {
-  function<Result<Error, ValueType>(addr_t)> insert =
-      [this, value](addr_t addr) -> Result<Error, ValueType> {
+Result<ValueType> MemoryManager::Insert(addr_t addr, uint32_t offset,
+                                        ValueType value) {
+  function<Result<ValueType>(addr_t)> insert =
+      [this, value](addr_t addr) -> Result<ValueType> {
     Heap[addr] = value;
     return ReturnOk<ValueType>(value);
   };
 
   return TranslatePAddress(addr)
-      .RightMap(static_cast<function<Result<Error, addr_t>(paddr_t)>>(
+      .MapOk(static_cast<function<Result<addr_t>(paddr_t)>>(
           PageTableBoundsCheck{offset}))
-      .RightMap(insert);
+      .MapOk(insert);
 }
 
-Result<Error, ValueType> MemoryManager::Access(addr_t addr, uint32_t offset) {
+Result<ValueType> MemoryManager::Access(addr_t addr, uint32_t offset) {
   return TranslatePAddress(addr)
-      .RightMap(static_cast<function<Result<Error, addr_t>(paddr_t)>>(
+      .MapOk(static_cast<function<Result<addr_t>(paddr_t)>>(
           PageTableBoundsCheck{offset}))
-      .RightMap(static_cast<function<Result<Error, ValueType>(addr_t)>>(
+      .MapOk(static_cast<function<Result<ValueType>(addr_t)>>(
           [this](addr_t addr) { return this->Heap[addr].Unbox(); }));
 }
 
-Result<Error, addr_t> MemoryManager::Malloc(uint32_t size) {
-  function<Result<Error, uint32_t>(uint32_t)> bounds_check =
-      [this](uint32_t size) {
-        return HeapBoundsCheck{this->m_max_heap, this->heap_ptr}(size);
-      };
+Result<addr_t> MemoryManager::Malloc(uint32_t size) {
+  function<Result<uint32_t>(uint32_t)> bounds_check = [this](uint32_t size) {
+    return HeapBoundsCheck{this->m_max_heap, this->heap_ptr}(size);
+  };
 
-  function<Result<Error, uint32_t>(Error)> gc = [this](Error _) {
+  function<Result<uint32_t>(Error)> gc = [this](Error _) {
     return this->GarbageCollect();
   };
 
-  function<Result<Error, addr_t>(uint32_t)> allocate = [this](uint32_t size) {
+  function<Result<addr_t>(uint32_t)> allocate = [this](uint32_t size) {
     for (addr_t i = 0; i < m_max_pagetable; i++) {
       if (!this->PageTable[i].has_value()) {
         this->PageTable[i] = make_optional(make_pair(i, size));
@@ -60,16 +59,56 @@ Result<Error, addr_t> MemoryManager::Malloc(uint32_t size) {
     return ReturnError<addr_t>(OUT_OF_MEMORY, "Page table is out of space");
   };
 
-  function<Result<Error, uint32_t>(uint32_t)> lift_size =
-      [this, size](uint32_t _) { return ReturnOk(size); };
+  function<Result<uint32_t>(uint32_t)> lift_size = [this, size](uint32_t _) {
+    return ReturnOk(size);
+  };
 
   return lift_size(size)
-      .RightMap(bounds_check)
-      .IfLeftElseRight(RightCompose(gc, RightCompose(lift_size, bounds_check)),
-                       lift_size)
-      .RightMap(allocate);
+      .MapOk(bounds_check)
+      .IfErrorElseOk(ComposeOk(gc, ComposeOk(lift_size, bounds_check)),
+                     lift_size)
+      .MapOk(allocate);
 }
 
-Result<Error, uint32_t> GarbageCollect() { return ReturnOk<uint32_t>(0); }
+Result<ValueType> MemoryManager::Insert(ValueType addr, ValueType offset,
+                                        ValueType value) {
+  if (!(addr.type == PTR || addr.type == UINTEGER)) {
+    return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+
+  if (!(offset.type == UINTEGER)) {
+    return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+
+  return Insert(get<addr_t>(addr.Value), get<uint64_t>(offset.Value), value);
+};
+
+Result<ValueType> MemoryManager::Access(ValueType addr, ValueType offset) {
+  if (!(addr.type == PTR || addr.type == UINTEGER)) {
+    return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+
+  if (!(offset.type == UINTEGER)) {
+    return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+
+  return Access(get<addr_t>(addr.Value), get<uint64_t>(offset.Value));
+}
+
+Result<ValueType> MemoryManager::Malloc(ValueType size) {
+  if (!(size.type == UINTEGER)) {
+    return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+
+  auto r = Malloc(get<uint64_t>(size.Value));
+
+  function<Result<ValueType>(addr_t)> f = [](addr_t addr) {
+    return ReturnOk(ValueType{PTR, addr});
+  };
+
+  return r.MapOk(f);
+}
+
+Result<uint32_t> GarbageCollect() { return ReturnOk<uint32_t>(0); }
 
 }  // namespace dlvm

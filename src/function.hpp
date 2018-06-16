@@ -22,7 +22,7 @@ struct NativeFunction {
   NativeFunc func;
 
   NativeFunction(NativeFunc func) : func{func} {}
-  Result<Error, vector<ValueType>> Invoke(DLVMEnvironment *env);
+  Result<vector<ValueType>> Invoke(DLVMEnvironment *env);
 };
 
 struct ManagedFunction {
@@ -42,9 +42,9 @@ struct NativeFunctionTable {
 
  public:
   // false if function already has been loaded
-  Result<Error, bool> Load(string so_name, string handle);
-  Result<Error, bool> Unload();
-  Result<Error, vector<ValueType>> Call(uint32_t index, DLVMEnvironment *env);
+  Result<bool> Load(string so_name, string handle);
+  Result<bool> Unload();
+  Result<vector<ValueType>> Call(uint32_t index, DLVMEnvironment *env);
 };
 
 }  // namespace dlvm

@@ -2,8 +2,8 @@
 
 namespace dlvm {
 
-Result<Error, optional<NativeFunc>> DynamicLibraryLoader::Load(string so_name,
-                                                               string handle) {
+Result<optional<NativeFunc>> DynamicLibraryLoader::Load(string so_name,
+                                                        string handle) {
   SharedObject obj;
 
   obj.Name = so_name;
@@ -25,6 +25,8 @@ Result<Error, optional<NativeFunc>> DynamicLibraryLoader::Load(string so_name,
   return ReturnOk(make_optional<NativeFunc>((NativeFunc)handle_ref));
 }
 
-Result<Error, NativeFunc> DynamicLibraryLoader::Unload() {}
+Result<NativeFunc> DynamicLibraryLoader::Unload() {
+  return ReturnError<NativeFunc>(UNKNOWN, "");
+}
 
 }  // namespace dlvm

@@ -27,21 +27,22 @@ class Interpreter {
   inline uint32_t NextQuad();
   inline uint64_t NextWord();
 
-  Result<Error, ValueType> PushUInt();
-  Result<Error, ValueType> PushInt();
-  Result<Error, ValueType> PushFloat();
-  Result<Error, ValueType> PushBool();
-  Result<Error, ValueType> InsertArray();
-  Result<Error, ValueType> PushChar();
-  Result<Error, ValueType> Box();
-  Result<Error, ValueType> Unbox();
-  Result<Error, ValueType> CreateArray();
-  Result<Error, ValueType> AccessArray();
-  Result<Error, ValueType> InvokeNative();
-  Result<Error, ValueType> InvokeManaged();
-  Result<Error, ValueType> Return();
-  Result<Error, ValueType> Spawn();
-  Result<Error, ValueType> Join();
+  Result<ValueType> PushUInt();
+  Result<ValueType> PushInt();
+  Result<ValueType> PushFloat();
+  Result<ValueType> PushBool();
+  Result<ValueType> Pop() { return m_memory->Pop(); }
+  Result<ValueType> InsertArray();
+  Result<ValueType> PushChar();
+  Result<ValueType> Box();
+  Result<ValueType> Unbox();
+  Result<ValueType> CreateArray();
+  Result<ValueType> AccessArray();
+  Result<ValueType> InvokeNative();
+  Result<ValueType> InvokeManaged();
+  Result<ValueType> Return();
+  Result<ValueType> Spawn();
+  Result<ValueType> Join();
 
  public:
   /*
@@ -51,5 +52,14 @@ class Interpreter {
   */
   void Execute();
 };
+
+function<Result<ValueType>(ValueType, ValueType)> ArithmeticAdd =
+    ArithmeticFunctor{ADDOP};
+function<Result<ValueType>(ValueType, ValueType)> ArithmeticSub =
+    ArithmeticFunctor{SUBOP};
+function<Result<ValueType>(ValueType, ValueType)> ArithmeticMul =
+    ArithmeticFunctor{MULOP};
+function<Result<ValueType>(ValueType, ValueType)> ArithmeticDiv =
+    ArithmeticFunctor{DIVOP};
 
 }  // namespace dlvm

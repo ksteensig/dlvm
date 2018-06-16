@@ -5,10 +5,13 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
-Result<Error, vector<ValueType>> NativeFunction::Invoke(DLVMEnvironment *env) {}
+Result<vector<ValueType>> NativeFunction::Invoke(DLVMEnvironment *env) {
+  func(env);
+  return ReturnError<vector<ValueType>>(UNKNOWN, "");
+}
 
-Result<Error, vector<ValueType>> NativeFunctionTable::Call(
-    uint32_t index, DLVMEnvironment *env) {
+Result<vector<ValueType>> NativeFunctionTable::Call(uint32_t index,
+                                                    DLVMEnvironment *env) {
   if (m_functions.size() > index) {
     return m_functions[index].Invoke(env);
   } else {
@@ -17,8 +20,8 @@ Result<Error, vector<ValueType>> NativeFunctionTable::Call(
   }
 }  // namespace dlvm
 
-Result<Error, bool> NativeFunctionTable::Load(string so_name, string handle) {
-  function<Result<Error, bool>(optional<NativeFunc>)> add_func =
+Result<bool> NativeFunctionTable::Load(string so_name, string handle) {
+  function<Result<bool>(optional<NativeFunc>)> add_func =
       [this](optional<NativeFunc> nfunc) {
         if (nfunc.has_value()) {
           this->m_functions.push_back(NativeFunc{nfunc.value()});
@@ -28,7 +31,7 @@ Result<Error, bool> NativeFunctionTable::Load(string so_name, string handle) {
         }
       };
 
-  return m_library_loader.Load(so_name, handle).RightMap(add_func);
+  return m_library_loader.Load(so_name, handle).MapOk(add_func);
 }
 
 }  // namespace dlvm

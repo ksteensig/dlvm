@@ -24,7 +24,7 @@ struct ValueType;
 struct ReferenceType;
 
 // Left type and Right type
-template <typename E, typename T>
+template <typename T>
 class Result;
 
 typedef enum type_e {
@@ -33,14 +33,12 @@ typedef enum type_e {
   INTEGER,
   FLOAT,
   BOOL,
-  ARRAY,
   PTR,
   NATIVE_PTR,
   CLOSURE,
 } type_t;
 
 typedef enum { ADDOP, SUBOP, MULOP, DIVOP } ArithmeticOperator;
-typedef enum { LEFT, RIGHT } result_t;
 
 struct ValueType {
   type_t type;
@@ -64,163 +62,119 @@ struct ReferenceType {
 
   ReferenceType(type_t type, VType value) : type{type}, Value{value} {}
 
-  Result<Error, ValueType> Unbox();
+  Result<ValueType> Unbox();
 };
 
-template <typename E, typename T>
+template <typename T>
 class Result {
-  result_t m_rtype;
-  variant<E, T> m_result;
+  bool is_error;
+  variant<Error, T> m_result;
 
  public:
-  Result(result_t rtype, variant<E, T> result)
-      : m_rtype{rtype}, m_result{result} {}
+  Result(bool is_error, variant<Error, T> result)
+      : is_error{is_error}, m_result{result} {}
 
-  result_t ResultType() { return m_rtype; };
-  variant<E, T> Read() { return m_result; };
+  bool IsError() { return is_error; };
+  variant<Error, T> Read() { return m_result; };
 
-  template <typename L = E, typename R = T>
-  Result<L, R> RightMap(function<Result<L, R>(T)> f);
+  template <typename R = T>
+  Result<R> MapOk(function<Result<R>(T)> f);
 
-  template <typename L = E, typename R = T>
-  Result<L, R> LeftMap(function<Result<L, R>(E)> f);
+  Result<T> MapError(function<Result<T>(Error e)> f);
 
-  template <typename L = E, typename R = T>
-  Result<L, R> Then(function<Result<L, R>(void)> f);
+  Result<T> IfErrorElseOk(function<Result<T>(Error)> lf,
+                          function<Result<T>(T)> rf);
 
-  template <typename L = E, typename R = T>
-  Result<L, R> IfLeftElseRight(function<Result<L, R>(E)> l,
-                               function<Result<L, R>(T)> r);
+  template <typename U = T, typename R = T>
+  Result<R> AggregateOk(function<Result<R>(T, U)> f, Result<U> other);
 
-  template <typename L = E, typename R = T, typename U = L, typename V = R>
-  Result<L, R> RightZip(function<Result<L, R>(T, V)> f, Result<U, V> other);
+  Result<T> OnError();
 
-  template <typename L = E, typename R = T, typename U = L, typename V = R>
-  Result<L, R> LeftZip(function<Result<L, R>(E, U)> f, Result<U, V> other);
-
-  Result<Error, void> OnError(Error e);
+  T fromOk();
 };
 
-template <typename E, typename T>
-Result<E, T> ReturnLeft(E e) {
-  return Result<E, T>{LEFT, e};
-}
-
-template <typename E, typename T>
-Result<E, T> ReturnRight(T t) {
-  return Result<E, T>{RIGHT, t};
+template <typename T>
+Result<T> ReturnError(Error e) {
+  return Result<T>{true, e};
 }
 
 template <typename T>
-Result<Error, T> ReturnError(ErrorCode error_code, string msg) {
-  return ReturnLeft<Error, T>(Error{error_code, msg});
+Result<T> ReturnError(ErrorCode error_code, string msg) {
+  return Result<T>{true, Error{error_code, msg}};
 }
 
 template <typename T>
-Result<Error, T> ReturnOk(T t) {
-  return ReturnRight<Error, T>(t);
+Result<T> ReturnOk(T t) {
+  return Result<T>{false, t};
 }
 
-template <typename E, typename T>
-template <typename L, typename R>
-Result<L, R> Result<E, T>::RightMap(function<Result<L, R>(T)> f) {
-  switch (this->ResultType()) {
-    case RIGHT:
-      return f(get<T>(this->Read()));
-    case LEFT:
-    default:
-      return ReturnLeft<L, R>(get<E>(this->Read()));
+template <typename T>
+template <typename R>
+Result<R> Result<T>::MapOk(function<Result<R>(T)> f) {
+  if (this->IsError()) {
+    return ReturnError<R>(get<Error>(this->Read()));
+  } else {
+    return f(get<T>(this->Read()));
   }
 }
 
-template <typename E, typename T>
-template <typename L, typename R>
-Result<L, R> Result<E, T>::LeftMap(function<Result<L, R>(E)> f) {
-  switch (this->ResultType()) {
-    case LEFT:
-      return f(get<E>(this->Read()));
-    case RIGHT:
-    default:
-      return ReturnRight<L, R>(get<T>(this->Read()));
+template <typename T>
+Result<T> Result<T>::MapError(function<Result<T>(Error)> f) {
+  if (!this->IsError()) {
+    return *this;
+  } else {
+    return f(get<Error>(this->Read()));
   }
 }
 
-template <typename E, typename T>
-template <typename L, typename R>
-Result<L, R> Result<E, T>::IfLeftElseRight(function<Result<L, R>(E)> l,
-                                           function<Result<L, R>(T)> r) {
-  switch (this->ResultType()) {
-    case LEFT:
-      return l(get<E>(this->Read()));
-    case RIGHT:
-    default:
-      return r(get<T>(this->Read()));
+template <typename T>
+Result<T> Result<T>::IfErrorElseOk(function<Result<T>(Error)> lf,
+                                   function<Result<T>(T)> rf) {
+  if (this->IsError()) {
+    return lf(get<Error>(this->Read()));
+  } else {
+    return rf(get<T>(this->Read()));
   }
 }
 
-template <typename U, typename E, typename T, typename R>
-function<Result<E, R>(U)> RightCompose(function<Result<E, T>(U)> f1,
-                                       function<Result<E, R>(T)> f2) {
-  function<Result<E, R>(U)> f = [f1, f2](U u) { return f1(u).RightMap(f2); };
-  return f;
+template <typename T, typename U = T, typename R = T>
+function<Result<R>(U)> ComposeOk(function<Result<T>(U)> first,
+                                 function<Result<R>(T)> second) {
+  return [first, second](U u) { return first(u).MapOk(second); };
 }
 
-template <typename U, typename E, typename T, typename R>
-function<Result<E, R>(U)> LeftCompose(function<Result<E, T>(U)> f1,
-                                      function<Result<E, R>(E)> f2) {
-  function<Result<E, R>(U)> f = [f1, f2](U u) { return f1(u).LeftMap(f2); };
-  return f;
-}
-
-template <typename E, typename T>
-template <typename L, typename R>
-Result<L, R> Result<E, T>::Then(function<Result<L, R>(void)> f) {
-  return f();
-}
-
-template <typename L, typename R, typename T, typename U>
-struct ZipFunctor {
-  T r1;
-  function<Result<L, R>(T, U)> f;
-  ZipFunctor(function<Result<L, R>(T, U)> f, T r1) : r1{r1}, f{f} {}
-
-  Result<L, R> operator()(U r2) { return f(r1, r2); }
-};
-
-template <typename E, typename T>
-template <typename L, typename R, typename U, typename V>
-Result<L, R> Result<E, T>::RightZip(function<Result<L, R>(T, V)> f,
-                                    Result<U, V> other) {
-  switch (this->ResultType()) {
-    case RIGHT: {
-      function<Result<L, R>(T)> zf =
-          ZipFunctor<L, R, T, V>{f, get<T>(this->Read())};
-      return other.template RightMap<L, R>(zf);
-    }
-    case LEFT:
-    default:
-      return *this;
+template <typename T>
+template <typename U, typename R>
+Result<R> Result<T>::AggregateOk(function<Result<R>(T, U)> f, Result<U> other) {
+  if (this->IsError()) {
+    return ReturnError<R>(get<Error>(this->Read()));
+  } else {
+    function<Result<R>(U)> fu = [f, this](U u) {
+      return f(get<T>(this->Read()), u);
+    };
+    return other.MapOk(fu);
   }
 }
 
-template <typename E, typename T>
-template <typename L, typename R, typename U, typename V>
-Result<L, R> Result<E, T>::LeftZip(function<Result<L, R>(E, U)> f,
-                                   Result<U, V> other) {
-  switch (this->ResultType()) {
-    case LEFT:
-      function<Result<L, R>(E)> zf =
-          ZipFunctor<L, R, E, U>{f, get<E>(this->Read())};
-      return other.template LeftMap<L, R>(zf);
-    case RIGHT:
-    default:
-      return *this;
-  }
+template <typename T>
+Result<T> Result<T>::OnError() {
+  auto err = [](Error e) {
+    cout << "Typecode " << e.ErrCode << ": " << e.Message << endl;
+    exit(1);
+    return ReturnError<T>(e);
+  };
+
+  return this->MapError(err);
+}
+
+template <typename T>
+T Result<T>::fromOk() {
+  return get<T>(this->OnError().Read());
 }
 
 template <typename T1, typename T2>
-Result<Error, ValueType> ArithmeticInner(ArithmeticOperator op, T1 v1, T2 v2,
-                                         type_t v1_type, type_t v2_type) {
+Result<ValueType> ArithmeticInner(ArithmeticOperator op, T1 v1, T2 v2,
+                                  type_t v1_type, type_t v2_type) {
   switch (op) {
     case ADDOP:
       return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 + v2});
@@ -240,8 +194,8 @@ Result<Error, ValueType> ArithmeticInner(ArithmeticOperator op, T1 v1, T2 v2,
 }
 
 template <typename T>
-Result<Error, ValueType> ArithmeticOuter(ArithmeticOperator op, T v1,
-                                         ValueType v2, type_t v1_type) {
+Result<ValueType> ArithmeticOuter(ArithmeticOperator op, T v1, ValueType v2,
+                                  type_t v1_type) {
   switch (v2.type) {
     case INTEGER:
       return ArithmeticInner<T, int64_t>(op, v1, get<int64_t>(v2.Value),
@@ -260,7 +214,7 @@ Result<Error, ValueType> ArithmeticOuter(ArithmeticOperator op, T v1,
 struct ArithmeticFunctor {
   ArithmeticOperator op;
   ArithmeticFunctor(ArithmeticOperator op) : op{op} {}
-  Result<Error, ValueType> operator()(ValueType v1, ValueType v2) {
+  Result<ValueType> operator()(ValueType v1, ValueType v2) {
     switch (v1.type) {
       case INTEGER:
         return ArithmeticOuter<int64_t>(op, get<int64_t>(v1.Value), v2,

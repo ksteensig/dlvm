@@ -6,15 +6,6 @@ using namespace std;
 using namespace std::placeholders;
 
 int main() {
-  function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticAdd =
-      ArithmeticFunctor{ADDOP};
-  function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticSub =
-      ArithmeticFunctor{SUBOP};
-  function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticMul =
-      ArithmeticFunctor{MULOP};
-  function<Result<Error, ValueType>(ValueType, ValueType)> ArithmeticDiv =
-      ArithmeticFunctor{DIVOP};
-
   VType v1 = 1.1;
   VType v2 = (uint64_t)6;
 
@@ -24,11 +15,11 @@ int main() {
   auto r1 = ReturnOk(vt1);
   auto r2 = ReturnOk(vt2);
 
-  auto r3 = r1.RightZip(ArithmeticAdd, r2);
+  auto r3 = r1.AggregateOk(ArithmeticAdd, r2);
 
   NativeFunctionTable ft;
 
-  // ft.Load("./libtest.so", "test_func");
+  ft.Load("./libtest.so", "test_func");
 
   DLVMEnvironment env;
 
