@@ -28,7 +28,6 @@ class MemoryManager {
   addr_t m_stack_alloc = 4096;
 
   addr_t heap_ptr = 0;
-  addr_t stack_ptr = 0;
 
   shared_ptr<optional<paddr_t>[]> PageTable;
   shared_ptr<ReferenceType[]> Heap;
@@ -48,6 +47,8 @@ class MemoryManager {
 
  public:
   MemoryManager() {}
+
+  addr_t stack_ptr = 0;
 
   Result<ValueType> Insert(ValueType addr, ValueType offset, ValueType value);
 

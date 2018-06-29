@@ -34,13 +34,14 @@ typedef enum {
   BOX = 0x33,
   UNBOX = 0x34,
   JMPT = 0x40,
-  RET = 0x41,
+  JMP = 0x41,
+  RET = 0x42,
   INVOKE_MANAGED = 0x42,
   INVOKE_NATIVE = 0x43,
-  SPAWN = 0x44,
-  JOIN = 0x45,
-  SEND = 0x46,
-  RECEIVE = 0x47,
+  SPAWN = 0x50,
+  JOIN = 0x51,
+  SEND = 0x52,
+  RECEIVE = 0x53,
   HALT = 0xFF
 } opcode_t;
 }

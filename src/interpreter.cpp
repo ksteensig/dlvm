@@ -5,30 +5,80 @@ namespace dlvm {
 using namespace std;
 using namespace dlvm;
 
-ValueType _{};
+Result<ValueType> Interpreter::CreateArray() {
+  return Pop()
+      .MapOk(static_cast<function<Result<ValueType>(ValueType)>>(
+          [this](ValueType v) { return this->m_memory->Malloc(v); }))
+      .MapOk(push);
+}
 
-void Interpreter::Execute() {
-  function<Result<ValueType>(ValueType)> push = [this](ValueType value) {
-    return this->m_memory->Push(value);
+Result<ValueType> Interpreter::InsertArray() {
+  return ReturnOk<vector<ValueType>>(vector<ValueType>{})
+      .AggregateOk(push_back, Pop())
+      .AggregateOk(push_back, Pop())
+      .AggregateOk(push_back, Pop())
+      .MapOk(static_cast<function<Result<ValueType>(vector<ValueType>)>>(
+          [this](vector<ValueType> vec) {
+            return this->m_memory->Insert(vec.at(0), vec.at(1), vec.at(2));
+          }))
+      .MapOk(push);
+}
+
+Result<ValueType> Interpreter::AccessArray() {
+  return Pop()
+      .AggregateOk(
+          static_cast<function<Result<ValueType>(ValueType, ValueType)>>(
+              [this](ValueType v1, ValueType v2) {
+                return this->m_memory->Access(v1, v2);
+              }),
+          Pop())
+      .MapOk(push);
+}
+
+Result<ValueType> Interpreter::JumpOnTrue() {
+  uint32_t pc_ = this->NextQuad();
+  return Pop()
+      .MapOk(static_cast<function<Result<ValueType>(ValueType)>>(
+          [this](ValueType v) {
+            if (v.type == BOOL && get<bool>(v.Value)) {
+              return ReturnOk(v);
+            } else {
+              return ReturnError<ValueType>(UNKNOWN, "");
+            }
+          }))
+      .MapOk(static_cast<function<Result<ValueType>(ValueType)>>(
+          [pc_, this](ValueType v) {
+            this->pc = pc_;
+            return ReturnOk(v);
+          }));
+}
+
+Result<ValueType> Interpreter::InvokeManaged() {
+  function<Result<ManagedFunction>(ValueType)> get_func = [this](ValueType v) {
+    return this->m_managed_table->Get(v);
   };
 
-  function<Result<ValueType>(ValueType)> pop = [this](ValueType _) {
-    return this->m_memory->Pop();
-  };
-
-  function<Result<vector<ValueType>>(vector<ValueType>, ValueType)> push_back =
-      [this](vector<ValueType> vec, ValueType v) {
-        vec.push_back(v);
-        return ReturnOk(vec);
+  function<Result<ValueType>(ManagedFunction)> call =
+      [this](ManagedFunction m) {
+        this->Push(ValueType{UINTEGER, static_cast<uint32_t>(m.m_argc)});
+        this->Push(ValueType{UINTEGER, this->fp});
+        this->Push(ValueType{UINTEGER, this->pc});
+        this->fp = this->m_memory->stack_ptr;
+        this->pc = m.m_address;
+        return ReturnOk(ValueType{});
       };
 
+  return Pop().MapOk(get_func).MapOk(call);
+}
+
+void Interpreter::Execute() {
   while (true) {
     auto op = Next();
     switch (op) {
       case NOP:
         break;
       case POP:
-        m_memory->Pop().OnError();
+        Pop().OnError();
         break;
       case PUSH_UINT:
         ReturnOk<>(ValueType{FLOAT, (uint64_t)NextWord()})
@@ -66,33 +116,24 @@ void Interpreter::Execute() {
       case GE:
       case GT:
       case CREATE_ARRAY:
-        Pop()
-            .MapOk(static_cast<function<Result<ValueType>(ValueType)>>(
-                [this](ValueType v) { return this->m_memory->Malloc(v); }))
-            .MapOk(push)
-            .OnError();
+        CreateArray().OnError();
+        break;
       case ACCESS_ARRAY:
-        Pop()
-            .AggregateOk(
-                static_cast<function<Result<ValueType>(ValueType, ValueType)>>(
-                    [this](ValueType v1, ValueType v2) {
-                      return this->m_memory->Access(v1, v2);
-                    }),
-                Pop())
-            .MapOk(push)
-            .OnError();
+        AccessArray().OnError();
+        break;
       case INSERT_ARRAY:
-        ReturnOk<vector<ValueType>>(vector<ValueType>{})
-            .AggregateOk(push_back, Pop())
-            .AggregateOk(push_back, Pop())
-            .AggregateOk(push_back, Pop())
-            .MapOk(static_cast<function<Result<ValueType>(vector<ValueType>)>>(
-                [this](vector<ValueType> vec) {
-                  return this->m_memory->Insert(vec.at(0), vec.at(1),
-                                                vec.at(2));
-                }))
-            .MapOk(push)
-            .OnError();
+        InsertArray().OnError();
+        break;
+      case JMPT:
+        JumpOnTrue().OnError();
+        break;
+      case JMP:
+        this->pc = NextQuad();
+        break;
+      case INVOKE_MANAGED:
+        this->InvokeManaged().OnError();
+      case INVOKE_NATIVE:
+        m_native_table->Call(NextQuad(), env).OnError();
       case HALT:
       default:
         return;

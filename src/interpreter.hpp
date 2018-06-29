@@ -18,8 +18,13 @@ class Interpreter {
   // MemoryManager Memory;
   unique_ptr<uint8_t[]> m_program;
   uint32_t pc = 0;
+  uint32_t fp = 0;
 
-  unique_ptr<MemoryManager> m_memory;
+  shared_ptr<MemoryManager> m_memory;
+  unique_ptr<NativeFunctionTable> m_native_table;
+  unique_ptr<ManagedFunctionTable> m_managed_table;
+
+  DLVMEnvironment* env;
 
   ValueType reg1, reg2, reg3, reg4;
 
@@ -27,29 +32,29 @@ class Interpreter {
   inline uint32_t NextQuad();
   inline uint64_t NextWord();
 
-  Result<ValueType> PushUInt();
-  Result<ValueType> PushInt();
-  Result<ValueType> PushFloat();
-  Result<ValueType> PushBool();
+  Result<ValueType> Push(ValueType v) { return m_memory->Push(v); }
   Result<ValueType> Pop() { return m_memory->Pop(); }
   Result<ValueType> InsertArray();
-  Result<ValueType> PushChar();
-  Result<ValueType> Box();
-  Result<ValueType> Unbox();
   Result<ValueType> CreateArray();
   Result<ValueType> AccessArray();
-  Result<ValueType> InvokeNative();
+  Result<ValueType> JumpOnTrue();
   Result<ValueType> InvokeManaged();
-  Result<ValueType> Return();
-  Result<ValueType> Spawn();
-  Result<ValueType> Join();
+
+  function<Result<ValueType>(ValueType)> push = [this](ValueType value) {
+    return this->Push(value);
+  };
+
+  function<Result<vector<ValueType>>(vector<ValueType>, ValueType)> push_back =
+      [this](vector<ValueType> vec, ValueType v) {
+        vec.push_back(v);
+        return ReturnOk(vec);
+      };
 
  public:
-  /*
-  Interpreter(unique_ptr<vector<uint8_t>> program,
-             map<string, uint32_t> settings)
-     : Program{move(program)}, Memory{MemoryManager{settings}} {}
-  */
+  Interpreter(unique_ptr<uint8_t[]> program) : m_program{move(program)} {
+    env = new DLVMEnvironment(m_memory);
+  }
+
   void Execute();
 };
 

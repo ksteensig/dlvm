@@ -19,6 +19,9 @@ class DLVMEnvironment {
   shared_ptr<MemoryManager> m_memory;
 
  public:
+  DLVMEnvironment(shared_ptr<MemoryManager> memory_manager)
+      : m_memory{memory_manager} {}
+
   Result<ValueType> Push(ValueType value);
   Result<ValueType> Pop();
   Result<vector<ValueType>> GetArgs(uint8_t argc);

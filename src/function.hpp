@@ -32,6 +32,8 @@ struct ManagedFunction {
 
 struct ManagedFunctionTable {
   vector<ManagedFunction> m_functions;
+
+  Result<ManagedFunction> Get(ValueType);
 };
 
 struct NativeFunctionTable {

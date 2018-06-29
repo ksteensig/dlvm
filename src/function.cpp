@@ -5,6 +5,18 @@ namespace dlvm {
 using namespace dlvm;
 using namespace std;
 
+Result<ManagedFunction> ManagedFunctionTable::Get(ValueType v) {
+  if (v.type == UINTEGER) {
+    auto i = get<uint32_t>(v.Value);
+    if (m_functions.size() > i) {
+      return ReturnOk<>(m_functions[i]);
+    }
+  }
+
+  return ReturnError<ManagedFunction>(OUT_OF_BOUNDS,
+                                      "Calling non-existent function");
+}
+
 Result<vector<ValueType>> NativeFunction::Invoke(DLVMEnvironment *env) {
   func(env);
   return ReturnError<vector<ValueType>>(UNKNOWN, "");

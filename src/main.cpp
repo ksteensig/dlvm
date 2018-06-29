@@ -21,9 +21,9 @@ int main() {
 
   ft.Load("./libtest.so", "test_func");
 
-  DLVMEnvironment env;
+  // DLVMEnvironment *env = ;
 
-  ft.Call(0, &env);
+  // ft.Call(0, &env);
 
   // cout << get<double>(get<ValueType>(r3.result).Value) << endl;
 
