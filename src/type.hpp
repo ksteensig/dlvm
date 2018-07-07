@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -77,16 +78,17 @@ class Result {
   bool IsError() { return is_error; };
   variant<Error, T> Read() { return m_result; };
 
-  template <typename R = T>
-  Result<R> MapOk(function<Result<R>(T)> f);
+  template <typename R, typename F>
+  Result<R> MapOk(F f);
 
-  Result<T> MapError(function<Result<T>(Error e)> f);
+  template <typename R, typename U, typename F>
+  Result<R> MapOk(F f, Result<U> other);
 
-  Result<T> IfErrorElseOk(function<Result<T>(Error)> lf,
-                          function<Result<T>(T)> rf);
+  template <typename F>
+  Result<T> MapError(F f);
 
-  template <typename U = T, typename R = T>
-  Result<R> AggregateOk(function<Result<R>(T, U)> f, Result<U> other);
+  template <typename F, typename G>
+  Result<T> IfErrorElseOk(F lf, G rf);
 
   Result<T> OnError();
 
@@ -109,8 +111,9 @@ Result<T> ReturnOk(T t) {
 }
 
 template <typename T>
-template <typename R>
-Result<R> Result<T>::MapOk(function<Result<R>(T)> f) {
+template <typename R, typename F>
+Result<R> Result<T>::MapOk(F f) {
+  is_convertible<F, function<Result<R>(T)>>{};
   if (this->IsError()) {
     return ReturnError<R>(get<Error>(this->Read()));
   } else {
@@ -119,7 +122,21 @@ Result<R> Result<T>::MapOk(function<Result<R>(T)> f) {
 }
 
 template <typename T>
-Result<T> Result<T>::MapError(function<Result<T>(Error)> f) {
+template <typename R, typename U, typename F>
+Result<R> Result<T>::MapOk(F f, Result<U> other) {
+  is_convertible<F, function<Result<R>(T, U)>>{};
+  if (this->IsError()) {
+    return ReturnError<R>(get<Error>(this->Read()));
+  } else {
+    auto fu = [f, this](U u) { return f(get<T>(this->Read()), u); };
+    return other.template MapOk<R>(fu);
+  }
+}
+
+template <typename T>
+template <typename F>
+Result<T> Result<T>::MapError(F f) {
+  is_convertible<F, function<Result<T>(Error)>>{};
   if (!this->IsError()) {
     return *this;
   } else {
@@ -128,8 +145,10 @@ Result<T> Result<T>::MapError(function<Result<T>(Error)> f) {
 }
 
 template <typename T>
-Result<T> Result<T>::IfErrorElseOk(function<Result<T>(Error)> lf,
-                                   function<Result<T>(T)> rf) {
+template <typename F, typename G>
+Result<T> Result<T>::IfErrorElseOk(F lf, G rf) {
+  is_convertible<F, function<Result<T>(Error)>>{};
+  is_convertible<G, function<Result<T>(T)>>{};
   if (this->IsError()) {
     return lf(get<Error>(this->Read()));
   } else {
@@ -137,23 +156,11 @@ Result<T> Result<T>::IfErrorElseOk(function<Result<T>(Error)> lf,
   }
 }
 
-template <typename T, typename U = T, typename R = T>
-function<Result<R>(U)> ComposeOk(function<Result<T>(U)> first,
-                                 function<Result<R>(T)> second) {
-  return [first, second](U u) { return first(u).MapOk(second); };
-}
-
-template <typename T>
-template <typename U, typename R>
-Result<R> Result<T>::AggregateOk(function<Result<R>(T, U)> f, Result<U> other) {
-  if (this->IsError()) {
-    return ReturnError<R>(get<Error>(this->Read()));
-  } else {
-    function<Result<R>(U)> fu = [f, this](U u) {
-      return f(get<T>(this->Read()), u);
-    };
-    return other.MapOk(fu);
-  }
+template <typename T, typename U = T, typename R = T, typename F, typename G>
+function<Result<R>(U)> ComposeOk(F first, G second) {
+  is_convertible<F, function<Result<T>(U)>>{};
+  is_convertible<G, function<Result<R>(T)>>{};
+  return [first, second](U u) { return first(u).template MapOk<R>(second); };
 }
 
 template <typename T>
@@ -214,7 +221,7 @@ Result<ValueType> ArithmeticOuter(ArithmeticOperator op, T v1, ValueType v2,
 struct ArithmeticFunctor {
   ArithmeticOperator op;
   ArithmeticFunctor(ArithmeticOperator op) : op{op} {}
-  Result<ValueType> operator()(ValueType v1, ValueType v2) {
+  Result<ValueType> operator()(ValueType v1, ValueType v2) const {
     switch (v1.type) {
       case INTEGER:
         return ArithmeticOuter<int64_t>(op, get<int64_t>(v1.Value), v2,

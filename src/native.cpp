@@ -15,7 +15,7 @@ Result<optional<NativeFunc>> DynamicLibraryLoader::Load(string so_name,
         INVALID_ARGUMENT, "Shared object " + so_name + " could not be found");
   }
 
-  void* handle_ref = dlsym(obj.Library, handle.c_str());
+  void *handle_ref = dlsym(obj.Library, handle.c_str());
 
   if (!handle_ref) {
     return ReturnError<optional<NativeFunc>>(

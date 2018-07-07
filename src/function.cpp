@@ -30,7 +30,7 @@ Result<vector<ValueType>> NativeFunctionTable::Call(uint32_t index,
     return ReturnError<vector<ValueType>>(OUT_OF_BOUNDS,
                                           "Calling non-existent function");
   }
-}  // namespace dlvm
+}
 
 Result<bool> NativeFunctionTable::Load(string so_name, string handle) {
   function<Result<bool>(optional<NativeFunc>)> add_func =
@@ -43,7 +43,7 @@ Result<bool> NativeFunctionTable::Load(string so_name, string handle) {
         }
       };
 
-  return m_library_loader.Load(so_name, handle).MapOk(add_func);
+  return m_library_loader.Load(so_name, handle).template MapOk<bool>(add_func);
 }
 
 }  // namespace dlvm

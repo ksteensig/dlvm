@@ -1,5 +1,5 @@
 #include <cstddef>
-#include "interpreter.hpp"
+#include "type.hpp"
 
 using namespace dlvm;
 using namespace std;
@@ -14,13 +14,20 @@ int main() {
 
   auto r1 = ReturnOk(vt1);
   auto r2 = ReturnOk(vt2);
+  auto ArithmeticAdd = ArithmeticFunctor{ADDOP};
 
-  auto r3 = r1.AggregateOk(ArithmeticAdd, r2);
+  auto f = [](ValueType v) { return ReturnOk(v); };
 
-  NativeFunctionTable ft;
+  r1.template MapOk<ValueType>(f);
 
-  ft.Load("./libtest.so", "test_func");
+  r1.template MapOk<ValueType>(ArithmeticAdd, r2);
 
+  // ValueType r3 = r1.AggregateOk(ArithmeticAdd, r2);
+  /*
+    NativeFunctionTable ft;
+
+    ft.Load("./libtest.so", "test_func");
+  */
   // DLVMEnvironment *env = ;
 
   // ft.Call(0, &env);
