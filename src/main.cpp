@@ -6,6 +6,7 @@ using namespace std;
 using namespace std::placeholders;
 
 int main() {
+  /*
   VType v1 = 1.1;
   VType v2 = (uint64_t)6;
 
@@ -20,7 +21,7 @@ int main() {
   NativeFunctionTable ft;
 
   ft.Load("./libtest.so", "test_func");
-
+*/
   // DLVMEnvironment *env = ;
 
   // ft.Call(0, &env);
