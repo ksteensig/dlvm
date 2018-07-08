@@ -1,6 +1,6 @@
 project('dlvm', ['cpp'])
 
-add_global_arguments('-std=c++17', '-ldl', language : 'cpp')
+add_global_arguments('-std=c++17', '-ldl', '-Wreturn-type', language : 'cpp')
 #add_global_arguments('-g', language : 'cpp')
 
 include = include_directories('src')
