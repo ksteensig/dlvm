@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -10,6 +11,7 @@
 #include <vector>
 
 #include "function.hpp"
+#include "interpreter.hpp"
 #include "opcode.hpp"
 
 namespace dlvm {
@@ -30,22 +32,30 @@ struct _ManagedFunction {
 
 struct DLVMModule {
   string name;
-  unique_ptr<vector<string>> m_imports;
-  unique_ptr<vector<_NativeFunction>> m_native;
-  unique_ptr<vector<_ManagedFunction>> m_managed;
-  unique_ptr<vector<uint8_t>> m_program;
+  shared_ptr<vector<string>> m_imports;
+  shared_ptr<vector<_NativeFunction>> m_native;
+  shared_ptr<vector<_ManagedFunction>> m_managed;
+  shared_ptr<vector<uint8_t>> m_program;
 
-  DLVMModule(string name) : name{name} {}
+  DLVMModule(string name, shared_ptr<vector<string>> imports,
+             shared_ptr<vector<_NativeFunction>> native,
+             shared_ptr<vector<_ManagedFunction>> managed,
+             shared_ptr<vector<uint8_t>> program)
+      : name{name},
+        m_imports{imports},
+        m_native{native},
+        m_managed{managed},
+        m_program{program} {}
 };
 
 class DLVMModuleParser {
   istream& m_input;
 
   string m_name;
-  unique_ptr<vector<string>> m_imports;
-  unique_ptr<vector<_NativeFunction>> m_native;
-  unique_ptr<vector<_ManagedFunction>> m_managed;
-  unique_ptr<vector<uint8_t>> m_program;
+  shared_ptr<vector<string>> m_imports;
+  shared_ptr<vector<_NativeFunction>> m_native;
+  shared_ptr<vector<_ManagedFunction>> m_managed;
+  shared_ptr<vector<uint8_t>> m_program;
 
   string ParseSingleImport();
   void ParseImports();
@@ -56,22 +66,36 @@ class DLVMModuleParser {
   void ParseProgram();
 
  public:
-  DLVMModuleParser(string name, istream input) : m_input{input}, m_name{name} {
-    m_imports = make_unique<vector<string>>();
-    m_native = make_unique<vector<_NativeFunction>>();
-    m_managed = make_unique<vector<_ManagedFunction>>();
-    m_program = make_unique<vector<uint8_t>>();
+  DLVMModuleParser(string name, istream& input) : m_input{input}, m_name{name} {
+    m_imports = make_shared<vector<string>>();
+    m_native = make_shared<vector<_NativeFunction>>();
+    m_managed = make_shared<vector<_ManagedFunction>>();
+    m_program = make_shared<vector<uint8_t>>();
   }
 
   DLVMModule Parse();
 };
 
-class DLVMLoader {
+class DLVMFileLoader {
   vector<string> m_paths{"./"};
+  string m_main_module;
+  shared_ptr<vector<DLVMModule>> m_modules;
 
-  DLVMLoader(vector<string> paths, string main_module);
+  void Load(string module_name);
 
-  void Load();
+ public:
+  DLVMFileLoader(vector<string> paths, string main_module);
+
+  shared_ptr<vector<DLVMModule>> Load();
+};
+
+class DLVMModuleLinker {
+  shared_ptr<vector<DLVMModule>> m_modules;
+
+ public:
+  DLVMModuleLinker(shared_ptr<vector<DLVMModule>> modules)
+      : m_modules{modules} {}
+  Interpreter Link();
 };
 
 }  // namespace dlvm

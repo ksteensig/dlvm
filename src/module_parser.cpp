@@ -84,14 +84,51 @@ void DLVMModuleParser::ParseProgram() {
 }
 
 DLVMModule DLVMModuleParser::Parse() {
-  DLVMModule module{m_name};
+  ParseImports();
+  ParseNativeFunctions();
+  ParseManagedFunctions();
+  ParseProgram();
 
-  module.m_imports = move(m_imports);
-  module.m_native = move(m_native);
-  module.m_managed = move(m_managed);
-  module.m_program = move(m_program);
+  DLVMModule module{module.name, m_imports, m_native, m_managed, m_program};
 
   return module;
 }
+
+DLVMFileLoader::DLVMFileLoader(vector<string> paths, string main_module)
+    : m_paths{paths}, m_main_module{main_module} {
+  m_modules = make_shared<vector<DLVMModule>>();
+}
+
+shared_ptr<vector<DLVMModule>> DLVMFileLoader::Load() {
+  Load(m_main_module);
+  return m_modules;
+}
+
+void DLVMFileLoader::Load(string module_name) {
+  fstream module_stream;
+  module_stream.open(module_name);
+
+  DLVMModuleParser module_parser{module_name, module_stream};
+  auto module = module_parser.Parse();
+  module_stream.close();
+  m_modules->push_back(module);
+
+  // traverse the import tree by depth first.
+  for (uint16_t i = 0; i < module.m_imports->size(); i++) {
+    if (!any_of(module.m_imports->begin(), module.m_imports->end(),
+                [module_name](string m) { return m == module_name; })) {
+      Load(module.m_imports->at(i));
+    }
+  }
+}
+
+void DLVMModuleLinker::LinkSingle(string module_name) {
+  for (uint16_t i = 0; i < m_modules->size(); i++;) {
+    if (m_modules->at(i).name != module_name) {
+    }
+  }
+}
+
+Interpreter DLVMModuleLinker::Link() {}
 
 }  // namespace dlvm

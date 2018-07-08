@@ -133,7 +133,8 @@ void Interpreter::Execute() {
       case INVOKE_MANAGED:
         this->InvokeManaged().OnError();
       case INVOKE_NATIVE:
-        m_native_table->Call(NextQuad(), env).OnError();
+
+        m_native_table->Call(NextQuad() + NextQuad(), env).OnError();
       case HALT:
       default:
         return;

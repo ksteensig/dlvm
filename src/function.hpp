@@ -26,6 +26,7 @@ struct NativeFunction {
 };
 
 struct ManagedFunction {
+  uint32_t offset;
   uint8_t m_argc;
   addr_t m_address;
 };

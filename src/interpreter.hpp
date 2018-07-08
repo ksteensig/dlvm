@@ -15,14 +15,13 @@ using namespace std;
 using namespace dlvm;
 
 class Interpreter {
-  // MemoryManager Memory;
-  unique_ptr<uint8_t[]> m_program;
+  shared_ptr<uint8_t[]> m_program;
   uint32_t pc = 0;
   uint32_t fp = 0;
 
   shared_ptr<MemoryManager> m_memory;
-  unique_ptr<NativeFunctionTable> m_native_table;
-  unique_ptr<ManagedFunctionTable> m_managed_table;
+  shared_ptr<NativeFunctionTable> m_native_table;
+  shared_ptr<ManagedFunctionTable> m_managed_table;
 
   DLVMEnvironment* env;
 
@@ -51,7 +50,13 @@ class Interpreter {
       };
 
  public:
-  Interpreter(unique_ptr<uint8_t[]> program) : m_program{move(program)} {
+  Interpreter(shared_ptr<uint8_t[]> program, shared_ptr<MemoryManager> memory,
+              shared_ptr<NativeFunctionTable> native,
+              shared_ptr<ManagedFunctionTable> managed)
+      : m_program{program},
+        m_memory{memory},
+        m_native_table{native},
+        m_managed_table{managed} {
     env = new DLVMEnvironment(m_memory);
   }
 
