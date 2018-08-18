@@ -26,7 +26,6 @@ struct NativeFunction {
 };
 
 struct ManagedFunction {
-  uint32_t offset;
   uint8_t m_argc;
   addr_t m_address;
 };
@@ -47,7 +46,7 @@ struct NativeFunctionTable {
   // false if function already has been loaded
   Result<bool> Load(string so_name, string handle);
   Result<bool> Unload();
-  Result<vector<ValueType>> Call(uint32_t index, DLVMEnvironment *env);
+  Result<vector<ValueType>> Call(ValueType v, DLVMEnvironment *env);
 };
 
 }  // namespace dlvm

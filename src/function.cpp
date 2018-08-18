@@ -22,15 +22,15 @@ Result<vector<ValueType>> NativeFunction::Invoke(DLVMEnvironment *env) {
   return ReturnError<vector<ValueType>>(UNKNOWN, "");
 }
 
-Result<vector<ValueType>> NativeFunctionTable::Call(uint32_t index,
+Result<vector<ValueType>> NativeFunctionTable::Call(ValueType v,
                                                     DLVMEnvironment *env) {
-  if (m_functions.size() > index) {
-    return m_functions[index].Invoke(env);
+  if (v.type == UINTEGER && m_functions.size() > get<uint32_t>(v.Value)) {
+    return m_functions[get<uint32_t>(v.Value)].Invoke(env);
   } else {
     return ReturnError<vector<ValueType>>(OUT_OF_BOUNDS,
                                           "Calling non-existent function");
   }
-}  // namespace dlvm
+}
 
 Result<bool> NativeFunctionTable::Load(string so_name, string handle) {
   function<Result<bool>(optional<NativeFunc>)> add_func =

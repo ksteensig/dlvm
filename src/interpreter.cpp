@@ -71,6 +71,16 @@ Result<ValueType> Interpreter::InvokeManaged() {
   return Pop().MapOk(get_func).MapOk(call);
 }
 
+/*
+Result<ValueType> Interpreter::InvokeNative() {
+  Result<vector<ValueType>> call = [this](ValueType v) {
+    return this->m_native_table->Call(v, this->env);
+  };
+
+  auto v = Pop().MapOk(call);
+}
+*/
+
 void Interpreter::Execute() {
   while (true) {
     auto op = Next();
@@ -132,9 +142,10 @@ void Interpreter::Execute() {
         break;
       case INVOKE_MANAGED:
         this->InvokeManaged().OnError();
+        break;
       case INVOKE_NATIVE:
-
-        m_native_table->Call(NextQuad() + NextQuad(), env).OnError();
+        // this->InvokeNative().OnError();
+        break;
       case HALT:
       default:
         return;

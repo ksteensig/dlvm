@@ -38,6 +38,7 @@ class Interpreter {
   Result<ValueType> AccessArray();
   Result<ValueType> JumpOnTrue();
   Result<ValueType> InvokeManaged();
+  Result<ValueType> InvokeNative();
 
   function<Result<ValueType>(ValueType)> push = [this](ValueType value) {
     return this->Push(value);

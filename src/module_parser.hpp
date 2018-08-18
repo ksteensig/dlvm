@@ -91,11 +91,21 @@ class DLVMFileLoader {
 
 class DLVMModuleLinker {
   shared_ptr<vector<DLVMModule>> m_modules;
+  vector<NativeFunction> m_native;
+  vector<ManagedFunction> m_managed;
+  vector<uint8_t> m_program;
+
+  uint32_t program = 0;
+  uint32_t managed = 0;
+  uint32_t native = 0;
+
+  void LinkSingleManaged(DLVMModule& m);
+  void LinkSingleNative(DLVMModule& m);
 
  public:
   DLVMModuleLinker(shared_ptr<vector<DLVMModule>> modules)
       : m_modules{modules} {}
-  Interpreter Link();
+  std::unique_ptr<Interpreter> Link();
 };
 
 }  // namespace dlvm

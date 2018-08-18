@@ -122,13 +122,49 @@ void DLVMFileLoader::Load(string module_name) {
   }
 }
 
-void DLVMModuleLinker::LinkSingle(string module_name) {
-  for (uint16_t i = 0; i < m_modules->size(); i++;) {
-    if (m_modules->at(i).name != module_name) {
+// add offset for modules using the functions from DLVMModule m
+void DLVMModuleLinker::LinkSingleManaged(DLVMModule &m) {
+  if (m.m_managed->empty()) {
+    return;
+  }
+
+  map<uint32_t, uint32_t> managed_location;
+
+  uint32_t i = 0;
+
+  for (auto &f : *(m.m_managed)) {
+    if (f.module_name == m.name) {
+      f.addr += program;
+      managed_location[f.addr] = i++;
+      m_managed.push_back(ManagedFunction{f.argc, f.addr});
     }
+  }
+
+  for (auto &mo : *m_modules) {
+    for (auto &f : *(mo.m_managed)) {
+      if (f.module_name == m.name) {
+        auto addr = managed + managed_location.at(f.addr);
+        // insert values of managed into the 4 bytes after the function addr
+        std::copy_n(&mo.m_program->at(f.addr), 0x04, &(addr));
+      }
+    }
+  }
+
+  managed += i;
+}
+
+void DLVMModuleLinker::LinkSingleNative(DLVMModule &m) {
+  if (m.m_managed->empty()) {
+    return;
   }
 }
 
-Interpreter DLVMModuleLinker::Link() {}
+std::unique_ptr<Interpreter> DLVMModuleLinker::Link() {
+  for (auto &m : *(m_modules)) {
+    LinkSingleManaged(m);
+    LinkSingleNative(m);
+    program += m.m_program->size();
+  }
+}
 
 }  // namespace dlvm
