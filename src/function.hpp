@@ -25,14 +25,17 @@ struct NativeFunction {
   Result<vector<ValueType>> Invoke(DLVMEnvironment *env);
 };
 
+// name of function
+// address of function in function table
+// amount of arguments
 struct ManagedFunction {
-  uint8_t m_argc;
+  string name;
   addr_t m_address;
+  uint8_t m_argc;
 };
 
 struct ManagedFunctionTable {
   vector<ManagedFunction> m_functions;
-
   Result<ManagedFunction> Get(ValueType);
 };
 

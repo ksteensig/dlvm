@@ -65,12 +65,20 @@ _ManagedFunction DLVMModuleParser::ParseSingleManagedFunction() {
     module_name.push_back(m_input.get());
   }
 
+  uint16_t function_name_length = (m_input.get() << 8) | m_input.get();
+  auto function_name = vector<uint8_t>{};
+
+  for (uint16_t i = 0; i < function_name_length; i++) {
+    function_name.push_back(m_input.get());
+  }
+
   uint32_t addr = (m_input.get() << 24) | (m_input.get() << 16) |
                   (m_input.get() << 8) | m_input.get();
 
   uint8_t argc = m_input.get();
 
   mf.module_name = std::string(module_name.begin(), module_name.end());
+  mf.function_name = std::string(function_name.begin(), function_name.end());
   mf.addr = addr;
   mf.argc = argc;
 
@@ -128,22 +136,22 @@ void DLVMModuleLinker::LinkSingleManaged(DLVMModule &m) {
     return;
   }
 
-  map<uint32_t, uint32_t> managed_location;
+  map<string, uint32_t> managed_location;
 
   uint32_t i = 0;
 
   for (auto &f : *(m.m_managed)) {
     if (f.module_name == m.name) {
       f.addr += program;
-      managed_location[f.addr] = i++;
-      m_managed.push_back(ManagedFunction{f.argc, f.addr});
+      managed_location[f.function_name] = i++;
+      m_managed.push_back(ManagedFunction{f.function_name, f.addr, f.argc});
     }
   }
 
   for (auto &mo : *m_modules) {
     for (auto &f : *(mo.m_managed)) {
       if (f.module_name == m.name) {
-        auto addr = managed + managed_location.at(f.addr);
+        auto addr = managed + managed_location.at(f.function_name);
         // insert values of managed into the 4 bytes after the function addr
         std::copy_n(&mo.m_program->at(f.addr), 0x04, &(addr));
       }

@@ -26,6 +26,7 @@ struct _NativeFunction {
 
 struct _ManagedFunction {
   string module_name;  // module where the function comes from
+  string function_name;
   uint32_t addr;
   uint8_t argc;
 };

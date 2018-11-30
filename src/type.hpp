@@ -17,32 +17,41 @@ using namespace std;
 using namespace std::placeholders;
 
 using addr_t = uint32_t;
+
+// Value type declared as a variant, this is used by the ValueType struct
 using VType = variant<int64_t, uint64_t, double, bool, char, addr_t>;
+
+// DLVM type to represent a function pointer to native code
 using NativeFunc = void* (*)(void*);
 
 struct ValueType;
 struct ReferenceType;
 
-// Left type and Right type
 template <typename T>
 class Result;
 
+// type tags
 typedef enum type_e {
-  NIL,
-  UINTEGER,
-  INTEGER,
-  FLOAT,
+  NIL,       // Pretty much the NULL of DLVM
+  UINTEGER,  // 64bit unsigned integer
+  INTEGER,   // 64bit signed integer
+  FLOAT,     // double precision floating point
   BOOL,
-  PTR,
-  NATIVE_PTR,
-  CLOSURE,
+  PTR,         // ptr to managed heap memory
+  NATIVE_PTR,  // ptr to native memory
+  CLOSURE,     // declared for future use
 } type_t;
 
+// arithmetic operators
+// TODO: (mod) and probably also another type for boolean logic
 typedef enum { ADDOP, SUBOP, MULOP, DIVOP } ArithmeticOperator;
 
+// Representation of value types in DLVM
+// They are also used internally with the monadicish interface,
+// because they are pushed to and popped from the DLVM stack
 struct ValueType {
-  type_t type;
-  VType Value;
+  type_t type;  // type tag
+  VType Value;  // actual value
 
   ValueType() { type = NIL; }
 
@@ -51,10 +60,12 @@ struct ValueType {
   ReferenceType Box();
 };
 
+// ReferenceType can be unboxed into a ValueType and put on the stack
+// When boxing a ValueType it can be put in the heap
 struct ReferenceType {
-  type_t type;
-  bool Marked = false;
-  VType Value;
+  type_t type;          // type tag
+  bool Marked = false;  // used by garbage collector to determine if to remove
+  VType Value;          // actual value
 
   ReferenceType() { type = NIL; }
 
@@ -65,6 +76,9 @@ struct ReferenceType {
   Result<ValueType> Unbox();
 };
 
+// Monadicish interface to do error handling
+// All errors in DLVM can in practice be handled in OnError
+// IsError and Read are used internally by DLVM
 template <typename T>
 class Result {
   bool is_error;
@@ -78,18 +92,26 @@ class Result {
   variant<Error, T> Read() { return m_result; };
 
   template <typename R = T>
+  // MapOk works as a map function if Result is not an error, else it does
+  // nothing
   Result<R> MapOk(function<Result<R>(T)> f);
 
+  // MapError works as a map function if Result is an error, else it does
+  // nothing
   Result<T> MapError(function<Result<T>(Error e)> f);
 
   Result<T> IfErrorElseOk(function<Result<T>(Error)> lf,
                           function<Result<T>(T)> rf);
 
   template <typename U = T, typename R = T>
+  // is almost like bind for monads
   Result<R> AggregateOk(function<Result<R>(T, U)> f, Result<U> other);
 
+  // DLVM error handling method
   Result<T> OnError();
 
+  // returns internally stored object of type T if Result is not an error
+  // invokes error handling if it is an error
   T fromOk();
 };
 

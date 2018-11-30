@@ -17,6 +17,9 @@ using namespace dlvm;
 using namespace std;
 
 using allocated_t = uint32_t;
+
+// paddr_t is a virtual address for the pagetable
+// it contains an address to heap and how many bytes are allocated
 using paddr_t = pair<addr_t, allocated_t>;
 
 class MemoryManager {
@@ -29,12 +32,14 @@ class MemoryManager {
 
   addr_t heap_ptr = 0;
 
+  // pagetable addresses can be empty, which is why they are optional
   shared_ptr<optional<paddr_t>[]> PageTable;
   shared_ptr<ReferenceType[]> Heap;
   shared_ptr<ValueType[]> Stack;
 
   Result<paddr_t> TranslatePAddress(addr_t addr);
 
+  // forward declerations of functors for memory bounds checks
   struct PageTableBoundsCheck;
   struct HeapBoundsCheck;
 
