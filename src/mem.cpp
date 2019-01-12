@@ -2,9 +2,6 @@
 
 namespace dlvm {
 
-using namespace dlvm;
-using namespace std;
-
 Result<paddr_t> MemoryManager::TranslatePAddress(addr_t addr) {
   if (addr > m_max_pagetable) {
     return ReturnError<paddr_t>(SEGMENTATION_FAULT, "");
@@ -52,7 +49,7 @@ Result<addr_t> MemoryManager::Malloc(uint32_t size) {
   function<Result<addr_t>(uint32_t)> allocate = [this](uint32_t size) {
     for (addr_t i = 0; i < m_max_pagetable; i++) {
       if (!this->PageTable[i].has_value()) {
-        this->PageTable[i] = make_optional(make_pair(i, size));
+        this->PageTable[i] = std::make_optional(std::make_pair(i, size));
         return ReturnOk<addr_t>(i);
       }
     }
@@ -80,7 +77,8 @@ Result<ValueType> MemoryManager::Insert(ValueType addr, ValueType offset,
     return ReturnError<ValueType>(INVALID_ARGUMENT, "");
   }
 
-  return Insert(get<addr_t>(addr.Value), get<uint64_t>(offset.Value), value);
+  return Insert(std::get<addr_t>(addr.Value), std::get<uint64_t>(offset.Value),
+                value);
 };
 
 Result<ValueType> MemoryManager::Access(ValueType addr, ValueType offset) {
@@ -92,7 +90,7 @@ Result<ValueType> MemoryManager::Access(ValueType addr, ValueType offset) {
     return ReturnError<ValueType>(INVALID_ARGUMENT, "");
   }
 
-  return Access(get<addr_t>(addr.Value), get<uint64_t>(offset.Value));
+  return Access(std::get<addr_t>(addr.Value), std::get<uint64_t>(offset.Value));
 }
 
 Result<ValueType> MemoryManager::Malloc(ValueType size) {
@@ -100,7 +98,7 @@ Result<ValueType> MemoryManager::Malloc(ValueType size) {
     return ReturnError<ValueType>(INVALID_ARGUMENT, "");
   }
 
-  auto r = Malloc(get<uint64_t>(size.Value));
+  auto r = Malloc(std::get<uint64_t>(size.Value));
 
   function<Result<ValueType>(addr_t)> f = [](addr_t addr) {
     return ReturnOk(ValueType{PTR, addr});

@@ -12,8 +12,7 @@
 
 namespace dlvm {
 
-using namespace dlvm;
-using namespace std;
+using std::vector;
 
 class DLVMEnvironment {
   shared_ptr<MemoryManager> m_memory;
@@ -46,13 +45,14 @@ class DLVMEnvironment {
 // .so file
 struct SharedObject {
   void *Library;
-  string Name;
-  vector<string> Handles;
+  std::string Name;
+  vector<std::string> Handles;
 };
 
 struct DynamicLibraryLoader {
   vector<SharedObject> m_objects;
-  Result<optional<NativeFunc>> Load(string so_name, string handle);
+  Result<std::optional<NativeFunc>> Load(std::string so_name,
+                                         std::string handle);
   Result<NativeFunc> Unload();
 };
 

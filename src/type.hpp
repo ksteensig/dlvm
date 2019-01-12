@@ -12,8 +12,10 @@
 
 namespace dlvm {
 
-using namespace dlvm;
-using namespace std;
+using std::function;
+using std::get;
+using std::max;
+using std::variant;
 using namespace std::placeholders;
 
 using addr_t = uint32_t;
@@ -44,7 +46,7 @@ typedef enum type_e {
 
 // arithmetic operators
 // TODO: (mod) and probably also another type for boolean logic
-typedef enum { ADDOP, SUBOP, MULOP, DIVOP } ArithmeticOperator;
+typedef enum { ADDOP, SUBOP, MULOP, DIVOP, MODOP } ArithmeticOperator;
 
 // Representation of value types in DLVM
 // They are also used internally with the monadicish interface,
@@ -121,7 +123,7 @@ Result<T> ReturnError(Error e) {
 }
 
 template <typename T>
-Result<T> ReturnError(ErrorCode error_code, string msg) {
+Result<T> ReturnError(ErrorCode error_code, std::string msg) {
   return Result<T>{true, Error{error_code, msg}};
 }
 
@@ -181,7 +183,7 @@ Result<R> Result<T>::AggregateOk(function<Result<R>(T, U)> f, Result<U> other) {
 template <typename T>
 Result<T> Result<T>::OnError() {
   auto err = [](Error e) {
-    cout << "Typecode " << e.ErrCode << ": " << e.Message << endl;
+    std::cout << "Typecode " << e.ErrCode << ": " << e.Message << std::endl;
     exit(1);
     return ReturnError<T>(e);
   };
@@ -220,14 +222,14 @@ Result<ValueType> ArithmeticOuter(ArithmeticOperator op, T v1, ValueType v2,
                                   type_t v1_type) {
   switch (v2.type) {
     case INTEGER:
-      return ArithmeticInner<T, int64_t>(op, v1, get<int64_t>(v2.Value),
+      return ArithmeticInner<T, int64_t>(op, v1, std::get<int64_t>(v2.Value),
                                          v1_type, INTEGER);
     case UINTEGER:
-      return ArithmeticInner<T, uint64_t>(op, v1, get<uint64_t>(v2.Value),
+      return ArithmeticInner<T, uint64_t>(op, v1, std::get<uint64_t>(v2.Value),
                                           v1_type, UINTEGER);
     case FLOAT:
-      return ArithmeticInner<T, double>(op, v1, get<double>(v2.Value), v1_type,
-                                        FLOAT);
+      return ArithmeticInner<T, double>(op, v1, std::get<double>(v2.Value),
+                                        v1_type, FLOAT);
     default:
       return ReturnError<ValueType>(INVALID_ARGUMENT, "");
   }
@@ -239,13 +241,14 @@ struct ArithmeticFunctor {
   Result<ValueType> operator()(ValueType v1, ValueType v2) {
     switch (v1.type) {
       case INTEGER:
-        return ArithmeticOuter<int64_t>(op, get<int64_t>(v1.Value), v2,
+        return ArithmeticOuter<int64_t>(op, std::get<int64_t>(v1.Value), v2,
                                         INTEGER);
       case UINTEGER:
-        return ArithmeticOuter<uint64_t>(op, get<uint64_t>(v1.Value), v2,
+        return ArithmeticOuter<uint64_t>(op, std::get<uint64_t>(v1.Value), v2,
                                          UINTEGER);
       case FLOAT:
-        return ArithmeticOuter<double>(op, get<double>(v1.Value), v2, FLOAT);
+        return ArithmeticOuter<double>(op, std::get<double>(v1.Value), v2,
+                                       FLOAT);
       default:
         return ReturnError<ValueType>(INVALID_ARGUMENT, "");
     }

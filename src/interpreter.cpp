@@ -2,9 +2,6 @@
 
 namespace dlvm {
 
-using namespace std;
-using namespace dlvm;
-
 Result<ValueType> Interpreter::CreateArray() {
   return Pop()
       .MapOk(static_cast<function<Result<ValueType>(ValueType)>>(
@@ -17,7 +14,7 @@ Result<ValueType> Interpreter::InsertArray() {
       .AggregateOk(push_back, Pop())
       .AggregateOk(push_back, Pop())
       .AggregateOk(push_back, Pop())
-      .MapOk(static_cast<function<Result<ValueType>(vector<ValueType>)>>(
+      .MapOk(static_cast<function<Result<ValueType>(std::vector<ValueType>)>>(
           [this](vector<ValueType> vec) {
             return this->m_memory->Insert(vec.at(0), vec.at(1), vec.at(2));
           }))
@@ -40,7 +37,7 @@ Result<ValueType> Interpreter::JumpOnTrue() {
   return Pop()
       .MapOk(static_cast<function<Result<ValueType>(ValueType)>>(
           [this](ValueType v) {
-            if (v.type == BOOL && get<bool>(v.Value)) {
+            if (v.type == BOOL && std::get<bool>(v.Value)) {
               return ReturnOk(v);
             } else {
               return ReturnError<ValueType>(UNKNOWN, "");

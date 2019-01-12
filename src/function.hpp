@@ -13,8 +13,7 @@
 
 namespace dlvm {
 
-using namespace dlvm;
-using namespace std;
+using std::vector;
 
 typedef enum { NATIVE, MANAGED } FunctionType;
 
@@ -29,7 +28,7 @@ struct NativeFunction {
 // address of function in function table
 // amount of arguments
 struct ManagedFunction {
-  string name;
+  std::string name;
   addr_t m_address;
   uint8_t m_argc;
 };
@@ -47,7 +46,7 @@ struct NativeFunctionTable {
 
  public:
   // false if function already has been loaded
-  Result<bool> Load(string so_name, string handle);
+  Result<bool> Load(std::string so_name, std::string handle);
   Result<bool> Unload();
   Result<vector<ValueType>> Call(ValueType v, DLVMEnvironment *env);
 };

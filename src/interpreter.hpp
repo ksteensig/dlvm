@@ -11,8 +11,8 @@
 
 namespace dlvm {
 
-using namespace std;
-using namespace dlvm;
+using std::shared_ptr;
+using std::vector;
 
 class Interpreter {
   shared_ptr<uint8_t[]> m_program;

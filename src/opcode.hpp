@@ -30,7 +30,7 @@ typedef enum {
   GT = 0x28,
   CREATE_ARRAY = 0x30,
   ACCESS_ARRAY = 0x31,
-  INSERT_ARRAY = 0x32,
+  INSERT_ARRAY = 0x32,  // remember to create a FORK_ARRAY
   BOX = 0x33,
   UNBOX = 0x34,
   JMPT = 0x40,
