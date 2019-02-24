@@ -2,6 +2,7 @@
 
 namespace dlvm {
 
+/*
 Result<ValueType> Interpreter::CreateArray() {
   return Pop()
       .MapOk(static_cast<function<Result<ValueType>(ValueType)>>(
@@ -10,15 +11,10 @@ Result<ValueType> Interpreter::CreateArray() {
 }
 
 Result<ValueType> Interpreter::InsertArray() {
-  return ReturnOk<vector<ValueType>>(vector<ValueType>{})
-      .AggregateOk(push_back, Pop())
-      .AggregateOk(push_back, Pop())
-      .AggregateOk(push_back, Pop())
-      .MapOk(static_cast<function<Result<ValueType>(std::vector<ValueType>)>>(
-          [this](vector<ValueType> vec) {
-            return this->m_memory->Insert(vec.at(0), vec.at(1), vec.at(2));
-          }))
-      .MapOk(push);
+  auto addr = Pop().fromOk();
+  auto offset = Pop().fromOk();
+  auto value = Pop().fromOk();
+  return this->m_memory->Insert(addr, offset, value).MapOk(push);
 }
 
 Result<ValueType> Interpreter::AccessArray() {
@@ -31,7 +27,7 @@ Result<ValueType> Interpreter::AccessArray() {
           Pop())
       .MapOk(push);
 }
-
+*/
 Result<ValueType> Interpreter::JumpOnTrue() {
   uint32_t pc_ = this->NextQuad();
   return Pop()
