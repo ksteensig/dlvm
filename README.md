@@ -13,3 +13,5 @@ DLVM is a stack based virtual machine that uses a bytecode format that is inspir
 * Profile functions on run-time
 * JIT compiler
 * "Frontend" language like CLR has
+* Write demo compiler (currently a Scheme compiler is in the works)
+    - May end up being the frontend language
