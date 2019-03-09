@@ -1,24 +1,6 @@
 #include "mem.hpp"
 
 namespace dlvm {
-Result<addr_t> MemoryManager::Malloc(uint32_t size) {
-  if ((heap_ptr + size) > m_max_heap) {
-    SuperBlockGC();
-  }
-
-  if ((heap_ptr + size) > m_max_heap) {
-    BlockGC();
-  }
-
-  if ((heap_ptr + size) > m_max_heap) {
-    return ReturnError<addr_t>(OUT_OF_MEMORY,
-                               "Maximum heap size has been reached");
-  }
-
-  heap_ptr += size;
-
-  return ReturnOk<addr_t>(size);
-}
 
 void MemoryManager::MarkHelper(addr_t i) {
   if (!Heap[i].Marked) {
@@ -126,6 +108,87 @@ void MemoryManager::SuperBlockGC() {
   }
 
   ForwardPointers.clear();
+}
+
+Result<ValueType> MemoryManager::Insert(ValueType addr, ValueType offset,
+                                        ValueType value) {
+  if (addr.type != PTR) {
+  } else if (offset.type != UINTEGER) {
+  }
+
+  return Insert(std::get<addr_t>(addr.Value), std::get<uint64_t>(offset.Value),
+                value);
+}
+
+Result<ValueType> MemoryManager::Insert(addr_t addr, uint32_t offset,
+                                        ValueType value) {
+  if (heap_ptr < addr + offset) {
+    return ReturnError<ValueType>(
+        OUT_OF_BOUNDS, "Inserting into memory resulted in going out of bounds");
+  }
+
+  Heap[addr + offset] = value.Box();
+
+  return ReturnOk<ValueType>(value);
+}
+
+Result<ValueType> MemoryManager::Access(ValueType addr, ValueType offset) {
+  if (addr.type != PTR) {
+  } else if (offset.type != UINTEGER) {
+  }
+
+  return Access(std::get<addr_t>(addr.Value), std::get<uint64_t>(offset.Value));
+}
+
+Result<ValueType> MemoryManager::Access(addr_t addr, uint32_t offset) {
+  if (heap_ptr < addr + offset) {
+    return ReturnError<ValueType>(
+        OUT_OF_BOUNDS, "Accessing memory resulted in going out of bounds");
+  }
+
+  return Heap[addr + offset].Unbox();
+}
+
+Result<ValueType> MemoryManager::Malloc(ValueType size) {
+  if (size.type != UINTEGER) {
+  }
+
+  return Malloc(std::get<uint64_t>(size.Value));
+}
+
+Result<ValueType> MemoryManager::Malloc(uint32_t size) {
+  if ((heap_ptr + size) > m_max_heap) {
+    SuperBlockGC();
+  }
+  /*
+    if ((heap_ptr + size) > m_max_heap) {
+      BlockGC();
+    }
+  */
+  if ((heap_ptr + size) > m_max_heap) {
+    return ReturnError<ValueType>(OUT_OF_MEMORY,
+                                  "Maximum heap size has been reached");
+  }
+
+  heap_ptr += size;
+
+  return ReturnOk<ValueType>(ValueType{UINTEGER, heap_ptr - size});
+}
+
+Result<ValueType> MemoryManager::Push(ValueType value) {
+  if (m_max_stack < stack_ptr + 1) {
+  }
+
+  Stack[stack_ptr++] = value;
+
+  return ReturnOk<ValueType>(value);
+}
+
+Result<ValueType> MemoryManager::Pop() {
+  if (stack_ptr == 0) {
+  }
+
+  return ReturnOk<ValueType>(Stack[--stack_ptr]);
 }
 
 }  // namespace dlvm

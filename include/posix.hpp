@@ -2,6 +2,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstdint>
 
 namespace dlvm {
 
@@ -19,4 +20,5 @@ void *allocate_memory(uint32_t pages) {
 void deallocate_memory(void *p, uint32_t pages) {
   munmap(p, pages * get_page_size());
 }
+
 }  // namespace dlvm

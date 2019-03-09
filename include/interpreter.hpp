@@ -8,6 +8,7 @@
 
 #include "function.hpp"
 #include "opcode.hpp"
+#include "type.hpp"
 
 namespace dlvm {
 

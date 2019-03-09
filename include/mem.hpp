@@ -12,7 +12,7 @@
 
 #include "type.hpp"
 
-#if defined(__unix__) || defined(__CYGWIN__) || \
+#if defined(__unix__) || defined(__linux__) || \
     (defined(__APPLE__) && defined(__MACH__))
 #include "posix.hpp"
 #endif
@@ -90,7 +90,7 @@ class MemoryManager {
 
   Result<ValueType> Malloc(ValueType size);
 
-  Result<addr_t> Malloc(uint32_t size);
+  Result<ValueType> Malloc(uint32_t size);
 
   Result<ValueType> Push(ValueType value);
   Result<ValueType> Pop();
