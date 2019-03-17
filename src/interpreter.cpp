@@ -49,77 +49,99 @@ void Interpreter::Execute() {
       case GE:
       case GT:
       case CREATE_ARRAY: {
-        auto size =
-            Pop()
-                .AggregateOk(ArithmeticAdd,
-                             ReturnOk<>(ValueType{UINTEGER, (uint64_t)1}))
-                .fromOk();
-        auto ptr = m_memory->Malloc(size).fromOk();
-        auto arr = ptr;
-        arr.type = ARRAY;
-        m_memory->Push(ptr);
-        m_memory->Insert(ptr, ValueType{UINTEGER, (uint64_t)0}, arr);
+        EXCEPTION_HANDLE(size, Pop(), "");
+        TYPE_CHECK(size, UINTEGER, "");
+        size.Value = std::get<uint64_t>(size.Value)++;
+
+        EXCEPTION_HANDLE(ptr, m_memory->Malloc(size), "");
+        ptr.type = ARRAY;
+        EXCEPTION_HANDLE(_, Push(ptr), "");
+
+        m_memory->Insert(ptr, ValueType{UINTEGER, (uint64_t)0}, ptr);
       }; break;
       case ACCESS_ARRAY: {
-        auto addr = m_memory->Pop().fromOk();
-        auto offset = m_memory->Pop().fromOk();
+        EXCEPTION_HANDLE(addr, Pop(), "");
+        EXCEPTION_HANDLE(offset, Pop(), "");
+        EXCEPTION_HANDLE(arr, m_memory->Access(addr, offset), "");
 
-        auto arr = m_memory->Access(addr, offset).fromOk();
+        TYPE_CHECK(
+            arr, ARRAY,
+            ReturnError<bool>(TYPE_ERROR,
+                              "Type error: Tried to access non-existing array")
+                .OnError());
 
-        if (arr.type != ARRAY) {
-          ReturnError<bool>(TYPE_ERROR,
-                            "Type error: Tried to access non-existing array")
-              .OnError();
-        } else if (std::get<addr_t>(arr.Value) <
-                   std::get<uint64_t>(offset.Value)) {
+        if (std::get<addr_t>(arr.Value) < std::get<uint64_t>(offset.Value)) {
           ReturnError<bool>(
               OUT_OF_BOUNDS,
               "Out of bounds: Tried to access outside of an array")
               .OnError();
         }
-        offset = ReturnOk<>(offset)
-                     .AggregateOk(ArithmeticAdd,
-                                  ReturnOk<>(ValueType{UINTEGER, (uint64_t)1}))
-                     .fromOk();
 
-        auto value = m_memory->Access(addr, offset).fromOk();
+        offset.Value = std::get<uint64_t>(offset.Value)++;
 
-        m_memory->Push(value);
+        EXCEPTION_HANDLE(value, m_memory->Access(addr, offset), "");
+        EXCEPTION_HANDLE(_, Push(value), "");
       } break;
       case INSERT_ARRAY: {
-        auto addr = m_memory->Pop().fromOk();
-        auto offset = m_memory->Pop().fromOk();
+        EXCEPTION_HANDLE(addr, Pop(), "");
+        EXCEPTION_HANDLE(offset, Pop(), "");
+        EXCEPTION_HANDLE(arr, m_memory->Access(addr, offset), "");
 
-        auto arr = m_memory->Access(addr, offset).fromOk();
+        TYPE_CHECK(arr, ARRAY,
+                   ReturnError<bool>(
+                       TYPE_ERROR,
+                       "Type error: Tried to insert into non-existing array")
+                       .OnError());
 
-        if (arr.type != ARRAY) {
-          ReturnError<bool>(
-              TYPE_ERROR, "Type error: Tried to insert into non-existing array")
-              .OnError();
-        } else if (std::get<addr_t>(arr.Value) <
-                   std::get<uint64_t>(offset.Value)) {
+        if (std::get<addr_t>(arr.Value) < std::get<uint64_t>(offset.Value)) {
           ReturnError<bool>(
               OUT_OF_BOUNDS,
               "Out of bounds: Tried to insert outside of an array")
               .OnError();
         }
-        auto value = m_memory->Pop().fromOk();
-        offset = ReturnOk<>(offset)
-                     .AggregateOk(ArithmeticAdd,
-                                  ReturnOk<>(ValueType{UINTEGER, (uint64_t)1}))
-                     .fromOk();
 
-        m_memory->Insert(addr, offset, value).OnError();
+        EXCEPTION_HANDLE(value, Pop(), "");
+        offset.Value = std::get<uint64_t>(offset.Value)++;
+        EXCEPTION_HANDLE(_, m_memory->Insert(addr, offset, value), "");
       } break;
-      case JMPT:
-        break;
+      case JMPT: {
+        EXCEPTION_HANDLE(value, Pop(), "");
+
+        TYPE_CHECK(value, BOOL, "");
+
+        EXCEPTION_HANDLE(new_addr_vt, Pop(), "");
+
+        TYPE_CHECK(new_addr_vt, UINTEGER, "");
+
+        pc = std::get<uint64_t>(new_addr_vt.Value);
+      } break;
       case JMP:
         this->pc = NextQuad();
         break;
-      case INVOKE_MANAGED:
-        break;
-      case INVOKE_NATIVE:
-        // this->InvokeNative().OnError();
+      case CALL_MANAGED: {
+        EXCEPTION_HANDLE(function_ref_id, Pop(), "");
+        EXCEPTION_HANDLE(function_ref, constant_pool->getEntry(function_ref_id),
+                         "");
+
+        TYPE_CHECK(function_ref, ConstantPoolEntryTypeTag::MANAGED_FUNCTION_REF,
+                   "");
+
+        auto [module_id, function_id] =
+            std::get<std::pair<uint32_t, uint32_t>>(function_ref.data);
+
+        EXCEPTION_HANDLE(module_name, constant_pool->getEntry(module_id), "");
+        TYPE_CHECK(module_name, ConstantPoolEntryTypeTag::STRING, "");
+
+        EXCEPTION_HANDLE(function_name, constant_pool->getEntry(function_id),
+                         "");
+        TYPE_CHECK(function_name, ConstantPoolEntryTypeTag::STRING, "");
+
+        auto [addr, argc] = module_table->getFunction(
+            std::get<std::string>(module_name.data),
+            std::get<std::string>(function_name.data));
+      }; break;
+      case CALL_NATIVE:
+
         break;
       case HALT:
       default:

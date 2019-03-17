@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "function.hpp"
+#include "module.hpp"
 #include "opcode.hpp"
 #include "type.hpp"
 
@@ -14,9 +15,27 @@ namespace dlvm {
 
 using std::shared_ptr;
 using std::vector;
+using namespace module;
+
+#define EXCEPTION_HANDLE(name, action, error) \
+  auto name##_res = action;                   \
+  if (name##_res.IsError()) {                 \
+    error;                                    \
+  }                                           \
+  auto name = name##_res.fromOk();
+
+#define TYPE_CHECK(name, typ, error) \
+  if (name.type != typ) {            \
+    error;                           \
+  }
 
 class Interpreter {
   shared_ptr<uint8_t[]> m_program;
+  uint32_t m_program_length;
+
+  std::shared_ptr<DLVMModuleTable> module_table;
+  std::shared_ptr<ConstantPool> constant_pool;
+
   uint32_t pc = 0;
   uint32_t fp = 0;
   uint32_t current_module = 0;
@@ -35,9 +54,6 @@ class Interpreter {
 
   Result<ValueType> Push(ValueType v) { return m_memory->Push(v); }
   Result<ValueType> Pop() { return m_memory->Pop(); }
-  Result<ValueType> InsertArray();
-  Result<ValueType> CreateArray();
-  Result<ValueType> AccessArray();
   Result<ValueType> JumpOnTrue();
   Result<ValueType> InvokeManaged();
   Result<ValueType> InvokeNative();
@@ -45,12 +61,6 @@ class Interpreter {
   function<Result<ValueType>(ValueType)> push = [this](ValueType value) {
     return this->Push(value);
   };
-
-  function<Result<vector<ValueType>>(vector<ValueType>, ValueType)> push_back =
-      [this](vector<ValueType> vec, ValueType v) {
-        vec.push_back(v);
-        return ReturnOk(vec);
-      };
 
  public:
   Interpreter(shared_ptr<uint8_t[]> program, shared_ptr<MemoryManager> memory,

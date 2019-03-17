@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "function.hpp"
-#include "interpreter.hpp"
 #include "opcode.hpp"
 
 namespace dlvm {
@@ -24,6 +23,7 @@ namespace module {
 using std::pair;
 using std::shared_ptr;
 using std::string;
+using std::tuple;
 using std::vector;
 
 enum class ConstantPoolEntryTypeTag {
@@ -37,9 +37,9 @@ enum class ConstantPoolEntryTypeTag {
   BOOL
 };
 
-// (uint32_t, uint32_t) = first uint points to a module name, second uint points
-// to a function name, these can then be used to look up the function address in
-// the module table
+// (uint32_t, uint32_t) = first uint points to a module name, second
+// uint points to a function name, these can then be used to look
+// up the function address in the module table
 using constant_pool_entry_t =
     std::variant<std::pair<uint32_t, uint32_t>, std::string, uint32_t, uint64_t,
                  int64_t, double, uint8_t>;
@@ -59,6 +59,38 @@ class ConstantPool {
     m_entries.insert(m_entries.end(), pool->m_entries.begin(),
                      pool->m_entries.end());
   }
+  Result<ConstantPoolEntry> getEntry(ValueType entry);
+  Result<ConstantPoolEntry> getEntry(uint32_t entry);
+};
+
+class DLVMModuleTable {
+ private:
+  // (module_name, (function_name, global address of function, argc))
+  std::map<std::string, std::map<std::string, std::pair<uint32_t, uint32_t>>>
+      m_module_table;
+
+ public:
+  DLVMModuleTable() : m_module_table{} {}
+
+  void addModule(std::string module_name) {
+    m_module_table[module_name] =
+        std::map<std::string, std::pair<uint32_t, uint32_t>>{};
+  }
+
+  void addFunction(std::string module_name, std::string function_name,
+                   uint32_t addr, uint32_t argc) {
+    auto search = m_module_table.find(module_name);
+    if (search == m_module_table.end()) {
+      m_module_table[module_name] =
+          std::map<std::string, std::pair<uint32_t, uint32_t>>{};
+      m_module_table[module_name][function_name] = std::make_pair(addr, argc);
+    } else {
+      m_module_table[module_name][function_name] = std::make_pair(addr, argc);
+    }
+  }
+
+  std::pair<uint32_t, uint32_t> getFunction(std::string module_name,
+                                            std::string function_name) {}
 };
 
 struct DLVMParsedModule {
@@ -71,7 +103,9 @@ struct DLVMParsedModule {
 
   std::shared_ptr<ConstantPool> constant_pool;
 
-  std::shared_ptr<std::vector<std::pair<std::string, uint32_t>>> function_table;
+  // (function name, function addr, argc)
+  std::shared_ptr<std::vector<std::tuple<std::string, uint32_t, uint32_t>>>
+      function_table;
 
   std::shared_ptr<uint8_t[]> byte_code;
 };
@@ -84,7 +118,10 @@ class DLVMModuleStreamParser {
   uint32_t index = 0;
 
   shared_ptr<ConstantPool> constant_pool;
-  shared_ptr<std::vector<std::pair<std::string, uint32_t>>> function_table;
+
+  // (function name, function addr, argc)
+  shared_ptr<std::vector<std::tuple<std::string, uint32_t, uint32_t>>>
+      function_table;
 
   uint8_t getByte() { return buffer[index++]; }
 
@@ -134,6 +171,7 @@ class DLVMModuleStreamParser {
   std::pair<uint32_t, uint32_t> parseManagedFunctionRef() {
     uint32_t module_name_index = parseUInt32();
     uint32_t function_name_index = parseUInt32();
+    // uint32_t argc = parseUInt32();
 
     return std::make_pair(module_name_index, function_name_index);
   }
@@ -141,6 +179,7 @@ class DLVMModuleStreamParser {
   std::pair<uint32_t, uint32_t> parseNativeFunctionRef() {
     uint32_t shared_obj_filename_index = parseUInt32();
     uint32_t function_name_index = parseUInt32();
+    uint32_t argc = parseUInt32();
 
     return std::make_pair(shared_obj_filename_index, function_name_index);
   }
@@ -182,8 +221,8 @@ class DLVMModuleStreamParser {
 
       switch (type_tag) {
       MANAGED_FUNCTION_REF:
-        constant_pool->addEntry(
-            ConstantPoolEntry{type_tag, parseManagedFunctionRef()});
+        constant_pool->addEntry(ConstantPoolEntry{
+            type_tag, (constant_pool_entry_t)parseManagedFunctionRef()});
         break;
       NATIVE_FUNCTION_REF:
         constant_pool->addEntry(
@@ -213,7 +252,8 @@ class DLVMModuleStreamParser {
     }
 
     for (uint32_t i = 0; i < function_table_length; i++) {
-      function_table->push_back(make_pair(parseString(), parseUInt32()));
+      function_table->push_back(
+          std::make_tuple(parseString(), parseUInt32(), parseUInt32()));
     }
 
     auto byte_code = getBytes(byte_code_length);
@@ -221,30 +261,6 @@ class DLVMModuleStreamParser {
     return std::make_optional(DLVMParsedModule{
         magic_number, module_name, constant_pool_length, function_table_length,
         byte_code_length, constant_pool, function_table, byte_code});
-  }
-};
-
-class DLVMModuleTable {
- private:
-  // (module_name, (function_name, global address of function))
-  std::map<std::string, std::map<std::string, uint32_t>> m_module_table;
-
- public:
-  DLVMModuleTable() : m_module_table{} {}
-
-  void addModule(std::string module_name) {
-    m_module_table[module_name] = std::map<std::string, uint32_t>{};
-  }
-
-  void addFunction(std::string module_name, std::string function_name,
-                   uint32_t addr) {
-    auto search = m_module_table.find(module_name);
-    if (search == m_module_table.end()) {
-      m_module_table[module_name] = std::map<std::string, uint32_t>{};
-      m_module_table[module_name][function_name] = addr;
-    } else {
-      m_module_table[module_name][function_name] = addr;
-    }
   }
 };
 
@@ -307,13 +323,13 @@ class DLVMModuleLinker {
       updateConstantPoolIndices(constants_index, module.constant_pool_length);
 
       for (auto &function : *(module.function_table)) {
-        auto [function_name, local_addr] = function;
+        auto [function_name, local_addr, argc] = function;
 
         // add function to module table and set the address to the global
         // address of the module's program code plus the function's offset in
         // the module
         module_table->addFunction(module.module_name, function_name,
-                                  program_index + local_addr);
+                                  program_index + local_addr, argc);
       }
 
       byte_code_index += module.byte_code_length;

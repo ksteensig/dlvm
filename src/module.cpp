@@ -1,3 +1,5 @@
 #include "module.hpp"
 
-namespace dlvm {}  // namespace dlvm
+namespace dlvm {
+namespace module {}
+}  // namespace dlvm

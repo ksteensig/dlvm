@@ -36,12 +36,16 @@ typedef enum {
   JMPT = 0x40,
   JMP = 0x41,
   RET = 0x42,
-  INVOKE_MANAGED = 0x42,
-  INVOKE_NATIVE = 0x43,
-  SPAWN = 0x50,
-  JOIN = 0x51,
-  SEND = 0x52,
-  RECEIVE = 0x53,
+  CALL_MANAGED = 0x43,
+  CALL_NATIVE = 0x45,
+  STORE_R1 = 0x50,
+  STORE_R2 = 0x51,
+  STORE_R3 = 0x52,
+  STORE_R4 = 0x53,
+  LOAD_R1 = 0x54,
+  LOAD_R2 = 0x55,
+  LOAD_R3 = 0x56,
+  LOAD_R4 = 0x57,
   HALT = 0xFF
 } opcode_t;
 }

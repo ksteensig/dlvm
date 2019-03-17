@@ -49,6 +49,18 @@ typedef enum type_e {
 // TODO: (mod) and probably also another type for boolean logic
 typedef enum { ADDOP, SUBOP, MULOP, DIVOP, MODOP } ArithmeticOperator;
 
+typedef enum {
+  ANDOP,
+  OROP,
+  XOROP,
+  NOTOP,
+  LTOP,
+  LEOP,
+  EQOP,
+  GEOP,
+  GTOP
+} BooleanOperator;
+
 // Representation of value types in DLVM
 // They are also used internally with the monadicish interface,
 // because they are pushed to and popped from the DLVM stack
@@ -116,6 +128,8 @@ class Result {
   // returns internally stored object of type T if Result is not an error
   // invokes error handling if it is an error
   T fromOk();
+
+  std::pair<bool, std::variant<Error, T>> Apply();
 };
 
 template <typename T>
@@ -250,6 +264,57 @@ struct ArithmeticFunctor {
       case FLOAT:
         return ArithmeticOuter<double>(op, std::get<double>(v1.Value), v2,
                                        FLOAT);
+      default:
+        return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+    }
+  }
+};
+
+template <typename T1, typename T2>
+Result<ValueType> BooleanInner(BooleanOperator op, T1 v1, T2 v2, type_t v1_type,
+                               type_t v2_type) {
+  switch (op) {
+    case ANDOP:
+      return ReturnOk<>(ValueType{BOOL, v1 && v2});
+    case OROP:
+      return ReturnOk<>(ValueType{BOOL, v1 || v2});
+    case XOROP:
+      // return ReturnOk<>(ValueType{BOOL, v1 v2});
+    case NOTOP:
+    case LTOP:
+    case LEOP:
+    case EQOP:
+    case GEOP:
+    case GTOP:
+    default:
+      return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+}
+
+template <typename T>
+Result<ValueType> BooleanOuter(BooleanOperator op, T v1, ValueType v2,
+                               type_t v1_type) {
+  switch (v2.type) {
+    case BOOL:
+      return BooleanInner<T, int64_t>(op, v1, std::get<int64_t>(v2.Value),
+    default:
+      return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+}
+
+struct BooleanFunctor {
+  BooleanOperator op;
+  BooleanFunctor(BooleanOperator op) : op{op} {}
+  Result<ValueType> operator()(ValueType v1, ValueType v2) {
+    switch (v1.type) {
+      case INTEGER:
+        return BooleanOuter<int64_t>(op, std::get<int64_t>(v1.Value), v2,
+                                     INTEGER);
+      case UINTEGER:
+        return BooleanOuter<uint64_t>(op, std::get<uint64_t>(v1.Value), v2,
+                                      UINTEGER);
+      case FLOAT:
+        return BooleanOuter<double>(op, std::get<double>(v1.Value), v2, FLOAT);
       default:
         return ReturnError<ValueType>(INVALID_ARGUMENT, "");
     }
