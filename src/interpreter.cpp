@@ -118,6 +118,25 @@ void Interpreter::Execute() {
       case JMP:
         this->pc = NextQuad();
         break;
+      case RET: {
+        EXCEPTION_HANDLE(res, Pop(), "");
+
+        m_memory->stack_ptr = frame_ptr;
+
+        EXCEPTION_HANDLE(pc_old, Pop(), "");
+        TYPE_CHECK(pc_old, UINTEGER, "");
+        pc = std::get<uint64_t>(pc_old.Value);
+
+        EXCEPTION_HANDLE(frame_ptr_old, Pop(), "");
+        TYPE_CHECK(frame_ptr_old, UINTEGER, "");
+        frame_ptr = std::get<uint64_t>(frame_ptr_old.Value);
+
+        EXCEPTION_HANDLE(argc, Pop(), "");
+        TYPE_CHECK(argc, UINTEGER, "");
+        m_memory->stack_ptr -= std::get<uint64_t>(argc.Value);
+
+        EXCEPTION_HANDLE(success, Push(res), "");
+      }; break;
       case CALL_MANAGED: {
         EXCEPTION_HANDLE(function_ref_id, Pop(), "");
         EXCEPTION_HANDLE(function_ref, constant_pool->getEntry(function_ref_id),
@@ -139,9 +158,15 @@ void Interpreter::Execute() {
         auto [addr, argc] = module_table->getFunction(
             std::get<std::string>(module_name.data),
             std::get<std::string>(function_name.data));
+
+        EXCEPTION_HANDLE(argc_err, Push(ValueType{UINTEGER, argc}), "");
+        EXCEPTION_HANDLE(fp_err, Push(ValueType{UINTEGER, frame_ptr}), "");
+        EXCEPTION_HANDLE(pc_err, Push(ValueType{UINTEGER, pc}), "");
+
+        frame_ptr = m_memory->stack_ptr;
+        pc = addr;
       }; break;
       case CALL_NATIVE:
-
         break;
       case HALT:
       default:

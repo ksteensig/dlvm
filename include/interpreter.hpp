@@ -37,7 +37,7 @@ class Interpreter {
   std::shared_ptr<ConstantPool> constant_pool;
 
   uint32_t pc = 0;
-  uint32_t fp = 0;
+  uint32_t frame_ptr = 0;
   uint32_t current_module = 0;
 
   shared_ptr<MemoryManager> m_memory;
