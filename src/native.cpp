@@ -2,8 +2,32 @@
 
 namespace dlvm {
 
-Result<std::optional<NativeFunc>> DynamicLibraryLoader::Load(
-    std::string so_name, std::string handle) {
+Result<bool> NativeFunctionTable::Call(std::string so_name, std::string handle,
+                                       DLVMEnvironment *env) {
+  Result<bool> loaded = ReturnOk(true);
+
+  auto so_search = m_functions.find(so_name);
+  if (so_search == m_functions.end()) {
+    loaded = m_library_loader.Load(so_name, handle);
+  } else {
+    auto fun_search = m_functions[so_name].find(handle);
+    if (fun_search == m_functions[so_name].end()) {
+      loaded = m_library_loader.Load(so_name, handle);
+    }
+  }
+
+  if (loaded.IsError()) {
+    return loaded;
+  }
+
+  auto f = m_functions[so_name][handle];
+  f(env);
+
+  return loaded;
+}
+
+Result<bool> DynamicLibraryLoader::Load(std::string so_name,
+                                        std::string handle) {
   SharedObject obj;
 
   obj.Name = so_name;
@@ -11,22 +35,22 @@ Result<std::optional<NativeFunc>> DynamicLibraryLoader::Load(
   obj.Handles.push_back(handle);
 
   if (!obj.Library) {
-    return ReturnError<std::optional<NativeFunc>>(
+    return ReturnError<bool>(
         INVALID_ARGUMENT, "Shared object " + so_name + " could not be found");
   }
 
-  void* handle_ref = dlsym(obj.Library, handle.c_str());
+  void *handle_ref = dlsym(obj.Library, handle.c_str());
 
   if (!handle_ref) {
-    return ReturnError<std::optional<NativeFunc>>(
-        INVALID_ARGUMENT, "Function " + handle + " could not be found");
+    return ReturnError<bool>(INVALID_ARGUMENT,
+                             "Function " + handle + " could not be found");
   }
 
-  return ReturnOk(std::make_optional<NativeFunc>((NativeFunc)handle_ref));
+  return ReturnOk(true);
 }
 
-Result<NativeFunc> DynamicLibraryLoader::Unload() {
-  return ReturnError<NativeFunc>(UNKNOWN, "");
+Result<bool> DynamicLibraryLoader::Unload() {
+  return ReturnError<bool>(UNKNOWN, "");
 }
 
 }  // namespace dlvm

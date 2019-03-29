@@ -6,8 +6,8 @@
 #include <optional>
 #include <vector>
 
-#include "function.hpp"
 #include "module.hpp"
+#include "native.hpp"
 #include "opcode.hpp"
 #include "type.hpp"
 
@@ -41,8 +41,7 @@ class Interpreter {
   uint32_t current_module = 0;
 
   shared_ptr<MemoryManager> m_memory;
-  shared_ptr<NativeFunctionTable> m_native_table;
-  shared_ptr<ManagedFunctionTable> m_managed_table;
+  NativeFunctionTable m_native_table;
 
   DLVMEnvironment* env;
 
@@ -63,13 +62,8 @@ class Interpreter {
   };
 
  public:
-  Interpreter(shared_ptr<uint8_t[]> program, shared_ptr<MemoryManager> memory,
-              shared_ptr<NativeFunctionTable> native,
-              shared_ptr<ManagedFunctionTable> managed)
-      : m_program{program},
-        m_memory{memory},
-        m_native_table{native},
-        m_managed_table{managed} {
+  Interpreter(shared_ptr<uint8_t[]> program, shared_ptr<MemoryManager> memory)
+      : m_program{program}, m_memory{memory} {
     env = new DLVMEnvironment(m_memory);
   }
 

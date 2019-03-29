@@ -5,14 +5,15 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>
 
-#include "function.hpp"
 #include "opcode.hpp"
+#include "type.hpp"
 
 namespace dlvm {
 
@@ -171,7 +172,6 @@ class DLVMModuleStreamParser {
   std::pair<uint32_t, uint32_t> parseManagedFunctionRef() {
     uint32_t module_name_index = parseUInt32();
     uint32_t function_name_index = parseUInt32();
-    // uint32_t argc = parseUInt32();
 
     return std::make_pair(module_name_index, function_name_index);
   }
@@ -179,7 +179,6 @@ class DLVMModuleStreamParser {
   std::pair<uint32_t, uint32_t> parseNativeFunctionRef() {
     uint32_t shared_obj_filename_index = parseUInt32();
     uint32_t function_name_index = parseUInt32();
-    uint32_t argc = parseUInt32();
 
     return std::make_pair(shared_obj_filename_index, function_name_index);
   }

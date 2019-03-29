@@ -166,8 +166,25 @@ void Interpreter::Execute() {
         frame_ptr = m_memory->stack_ptr;
         pc = addr;
       }; break;
-      case CALL_NATIVE:
-        break;
+      case CALL_NATIVE: {
+        EXCEPTION_HANDLE(function_ref_id, Pop(), "");
+        EXCEPTION_HANDLE(function_ref, constant_pool->getEntry(function_ref_id),
+                         "");
+
+        TYPE_CHECK(function_ref, ConstantPoolEntryTypeTag::MANAGED_FUNCTION_REF,
+                   "");
+
+        auto [so_name, handle_id] =
+            std::get<std::pair<uint32_t, uint32_t>>(function_ref.data);
+
+        EXCEPTION_HANDLE(so_name, constant_pool->getEntry(module_id), "");
+        TYPE_CHECK(so_name, ConstantPoolEntryTypeTag::STRING, "");
+
+        EXCEPTION_HANDLE(handle, constant_pool->getEntry(handle_id), "");
+        TYPE_CHECK(handle, ConstantPoolEntryTypeTag::STRING, "");
+
+        EXCEPTION_HANDLE(fun, m_native_table.Call(so_name, handle, env), "");
+      }; break;
       case HALT:
       default:
         return;
