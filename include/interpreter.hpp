@@ -71,12 +71,29 @@ class Interpreter {
 };
 
 function<Result<ValueType>(ValueType, ValueType)> ArithmeticAdd =
-    ArithmeticFunctor{ADDOP};
+    NumberFunctor{ADDOP};
 function<Result<ValueType>(ValueType, ValueType)> ArithmeticSub =
-    ArithmeticFunctor{SUBOP};
+    NumberFunctor{SUBOP};
 function<Result<ValueType>(ValueType, ValueType)> ArithmeticMul =
-    ArithmeticFunctor{MULOP};
+    NumberFunctor{MULOP};
 function<Result<ValueType>(ValueType, ValueType)> ArithmeticDiv =
-    ArithmeticFunctor{DIVOP};
+    NumberFunctor{DIVOP};
+
+function<Result<ValueType>(ValueType, ValueType)> GreaterThan =
+    NumberFunctor{GTOP};
+function<Result<ValueType>(ValueType, ValueType)> GreaterThanEquals =
+    NumberFunctor{GEOP};
+function<Result<ValueType>(ValueType, ValueType)> Equals = NumberFunctor{EQOP};
+function<Result<ValueType>(ValueType, ValueType)> LessThanEquals =
+    NumberFunctor{LEOP};
+function<Result<ValueType>(ValueType, ValueType)> LessThan =
+    NumberFunctor{LTOP};
+
+function<Result<ValueType>(ValueType, ValueType)> BooleanAnd =
+    BooleanFunctor{ANDOP};
+function<Result<ValueType>(ValueType, ValueType)> BooleanOr =
+    BooleanFunctor{OROP};
+function<Result<ValueType>(ValueType, ValueType)> BooleanXor =
+    BooleanFunctor{XOROP};
 
 }  // namespace dlvm

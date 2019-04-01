@@ -47,18 +47,24 @@ typedef enum type_e {
 
 // arithmetic operators
 // TODO: (mod) and probably also another type for boolean logic
-typedef enum { ADDOP, SUBOP, MULOP, DIVOP, MODOP } ArithmeticOperator;
+typedef enum {
+  ADDOP,
+  SUBOP,
+  MULOP,
+  DIVOP,
+  MODOP,
+  LTOP,
+  LEOP,
+  EQOP,
+  GEOP,
+  GTOP
+} NumberOperator;
 
 typedef enum {
   ANDOP,
   OROP,
   XOROP,
   NOTOP,
-  LTOP,
-  LEOP,
-  EQOP,
-  GEOP,
-  GTOP
 } BooleanOperator;
 
 // Representation of value types in DLVM
@@ -212,8 +218,8 @@ T Result<T>::fromOk() {
 }
 
 template <typename T1, typename T2>
-Result<ValueType> ArithmeticInner(ArithmeticOperator op, T1 v1, T2 v2,
-                                  type_t v1_type, type_t v2_type) {
+Result<ValueType> NumberOperatorInner(NumberOperator op, int64_t v1, int64_t v2,
+                                      type_t v1_type, type_t v2_type) {
   switch (op) {
     case ADDOP:
       return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 + v2});
@@ -227,84 +233,188 @@ Result<ValueType> ArithmeticInner(ArithmeticOperator op, T1 v1, T2 v2,
       } else {
         return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 / v2});
       }
+    case MODOP:
+      if (v2 == 0) {
+        return ReturnError<ValueType>(DIVISION_BY_ZERO, "");
+      } else {
+        return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 % v2});
+      }
+    case GTOP:
+      return ReturnOk<>(ValueType{BOOL, v1 > v2});
+    case GEOP:
+      return ReturnOk<>(ValueType{BOOL, v1 >= v2});
+    case EQOP:
+      return ReturnOk<>(ValueType{BOOL, v1 == v2});
+    case LEOP:
+      return ReturnOk<>(ValueType{BOOL, v1 <= v2});
+    case LTOP:
+      return ReturnOk<>(ValueType{BOOL, v1 < v2});
+    default:
+      return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+}
+
+Result<ValueType> NumberOperatorInner(NumberOperator op, uint64_t v1,
+                                      uint64_t v2, type_t v1_type,
+                                      type_t v2_type) {
+  switch (op) {
+    case ADDOP:
+      return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 + v2});
+    case SUBOP:
+      return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 - v2});
+    case MULOP:
+      return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 * v2});
+    case DIVOP:
+      if (v2 == 0) {
+        return ReturnError<ValueType>(DIVISION_BY_ZERO, "");
+      } else {
+        return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 / v2});
+      }
+    case MODOP:
+      if (v2 == 0) {
+        return ReturnError<ValueType>(DIVISION_BY_ZERO, "");
+      } else {
+        return ReturnOk<>(ValueType{max(v1_type, v2_type), v1 % v2});
+      }
+    case GTOP:
+      return ReturnOk<>(ValueType{BOOL, v1 > v2});
+    case GEOP:
+      return ReturnOk<>(ValueType{BOOL, v1 >= v2});
+    case EQOP:
+      return ReturnOk<>(ValueType{BOOL, v1 == v2});
+    case LEOP:
+      return ReturnOk<>(ValueType{BOOL, v1 <= v2});
+    case LTOP:
+      return ReturnOk<>(ValueType{BOOL, v1 < v2});
+    default:
+      return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+  }
+}
+
+Result<ValueType> NumberOperatorInner(NumberOperator op, double v1, double v2,
+                                      type_t v1_type, type_t v2_type) {
+  switch (op) {
+    case ADDOP:
+      return ReturnOk<>(ValueType{FLOAT, v1 + v2});
+    case SUBOP:
+      return ReturnOk<>(ValueType{FLOAT, v1 - v2});
+    case MULOP:
+      return ReturnOk<>(ValueType{FLOAT, v1 * v2});
+    case DIVOP:
+      if (v2 == 0) {
+        return ReturnError<ValueType>(DIVISION_BY_ZERO, "");
+      } else {
+        return ReturnOk<>(ValueType{FLOAT, v1 / v2});
+      }
+    case GTOP:
+      return ReturnOk<>(ValueType{BOOL, v1 > v2});
+    case GEOP:
+      return ReturnOk<>(ValueType{BOOL, v1 >= v2});
+    case EQOP:
+      return ReturnOk<>(ValueType{BOOL, v1 == v2});
+    case LEOP:
+      return ReturnOk<>(ValueType{BOOL, v1 <= v2});
+    case LTOP:
+      return ReturnOk<>(ValueType{BOOL, v1 < v2});
     default:
       return ReturnError<ValueType>(INVALID_ARGUMENT, "");
   }
 }
 
 template <typename T>
-Result<ValueType> ArithmeticOuter(ArithmeticOperator op, T v1, ValueType v2,
-                                  type_t v1_type) {
+Result<ValueType> NumberOperatorOuter(NumberOperator op, T v1, ValueType v2,
+                                      type_t v1_type) {
   switch (v2.type) {
     case INTEGER:
-      return ArithmeticInner<T, int64_t>(op, v1, std::get<int64_t>(v2.Value),
-                                         v1_type, INTEGER);
+      return NumberOperatorInner<T, int64_t>(
+          op, v1, std::get<int64_t>(v2.Value), v1_type, INTEGER);
     case UINTEGER:
-      return ArithmeticInner<T, uint64_t>(op, v1, std::get<uint64_t>(v2.Value),
-                                          v1_type, UINTEGER);
+      return NumberOperatorInner<T, uint64_t>(
+          op, v1, std::get<uint64_t>(v2.Value), v1_type, UINTEGER);
     case FLOAT:
-      return ArithmeticInner<T, double>(op, v1, std::get<double>(v2.Value),
-                                        v1_type, FLOAT);
+      return NumberOperatorInner<T, double>(op, v1, std::get<double>(v2.Value),
+                                            v1_type, FLOAT);
     default:
-      return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+      return ReturnError<ValueType>(TYPE_ERROR,
+                                    "Invalid type for right operand");
   }
 }
 
-struct ArithmeticFunctor {
-  ArithmeticOperator op;
-  ArithmeticFunctor(ArithmeticOperator op) : op{op} {}
+struct NumberFunctor {
+  NumberOperator op;
+  NumberFunctor(NumberOperator op) : op{op} {}
   Result<ValueType> operator()(ValueType v1, ValueType v2) {
     switch (v1.type) {
       case INTEGER:
-        return ArithmeticOuter<int64_t>(op, std::get<int64_t>(v1.Value), v2,
-                                        INTEGER);
+        return NumberOperatorOuter<int64_t>(op, std::get<int64_t>(v1.Value), v2,
+                                            INTEGER);
       case UINTEGER:
-        return ArithmeticOuter<uint64_t>(op, std::get<uint64_t>(v1.Value), v2,
-                                         UINTEGER);
+        return NumberOperatorOuter<uint64_t>(op, std::get<uint64_t>(v1.Value),
+                                             v2, UINTEGER);
       case FLOAT:
-        return ArithmeticOuter<double>(op, std::get<double>(v1.Value), v2,
-                                       FLOAT);
+        return NumberOperatorOuter<double>(op, std::get<double>(v1.Value), v2,
+                                           FLOAT);
       default:
-        return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+        return ReturnError<ValueType>(TYPE_ERROR,
+                                      "Invalid type for left operand");
     }
   }
 };
 
-/*
-case LTOP:
-case LEOP:
-case EQOP:
-case GEOP:
-case GTOP:
-*/
+auto BooleanNot = [](ValueType v1) {
+  if (v1.type != BOOL) {
+    return ReturnError<ValueType>(TYPE_ERROR, "");
+  } else {
+    v1.Value = !std::get<bool>(v1.Value);
+    return ReturnOk<>(v1);
+  }
+};
 
-/*
-
-template <typename T1, typename T2>
-Result<ValueType> BooleanInner(BooleanOperator op, T1 v1, T2 v2, type_t v1_type,
-                               type_t v2_type) {
+Result<ValueType> BooleanInner(BooleanOperator op, bool v1, bool v2) {
   switch (op) {
     case ANDOP:
       return ReturnOk<>(ValueType{BOOL, v1 && v2});
     case OROP:
       return ReturnOk<>(ValueType{BOOL, v1 || v2});
-    case XOROP:
-      // return ReturnOk<>(ValueType{BOOL, v1 v2});
-    case NOTOP:
     default:
       return ReturnError<ValueType>(INVALID_ARGUMENT, "");
   }
 }
 
-
-template <typename T>
-Result<ValueType> BooleanOuter(BooleanOperator op, T v1, ValueType v2,
-                               type_t v1_type) {
+Result<ValueType> BooleanOuter(BooleanOperator op, bool v1, ValueType v2) {
   switch (v2.type) {
     case BOOL:
-      return BooleanInner<T, int64_t>(op, v1, std::get<int64_t>(v2.Value),
+      return BooleanInner(op, v1, std::get<bool>(v2.Value));
     default:
-      return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+      return ReturnError<ValueType>(TYPE_ERROR, "");
+  }
+}
+
+template <class T1, class T2>
+Result<ValueType> BitwiseInner(BooleanOperator op, T1 v1, T2 v2,
+                               type_t v1_type) {
+  switch (op) {
+    case ANDOP:
+      return ReturnOk<>(ValueType{v1_type, v1 & v2});
+    case OROP:
+      return ReturnOk<>(ValueType{v1_type, v1 | v2});
+    case XOROP:
+      return ReturnOk<>(ValueType{v1_type, v1 ^ v2});
+  }
+}
+
+template <class T>
+Result<ValueType> BitwiseOuter(BooleanOperator op, T v1, ValueType v2,
+                               type_t v1_type) {
+  switch (v2.type) {
+    case INTEGER:
+      return BitwiseInner<T, int64_t>(op, v1, std::get<int64_t>(v2.Value),
+                                      v1_type);
+    case UINTEGER:
+      return BitwiseInner<T, uint64_t>(op, v1, std::get<uint64_t>(v2.Value),
+                                       v1_type);
+    default:
+      return ReturnError<ValueType>(TYPE_ERROR, "");
   }
 }
 
@@ -313,19 +423,18 @@ struct BooleanFunctor {
   BooleanFunctor(BooleanOperator op) : op{op} {}
   Result<ValueType> operator()(ValueType v1, ValueType v2) {
     switch (v1.type) {
+      case BOOL:
+        return BooleanOuter(op, std::get<bool>(v1.Value), v2);
       case INTEGER:
-        return BooleanOuter<int64_t>(op, std::get<int64_t>(v1.Value), v2,
+        return BitwiseOuter<int64_t>(op, std::get<int64_t>(v1.Value), v2,
                                      INTEGER);
       case UINTEGER:
-        return BooleanOuter<uint64_t>(op, std::get<uint64_t>(v1.Value), v2,
+        return BitwiseOuter<uint64_t>(op, std::get<uint64_t>(v1.Value), v2,
                                       UINTEGER);
-      case FLOAT:
-        return BooleanOuter<double>(op, std::get<double>(v1.Value), v2, FLOAT);
       default:
-        return ReturnError<ValueType>(INVALID_ARGUMENT, "");
+        return ReturnError<ValueType>(TYPE_ERROR, "");
     }
   }
 };
-*/
 
 }  // namespace dlvm

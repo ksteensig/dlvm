@@ -28,26 +28,38 @@ void Interpreter::Execute() {
         ReturnOk<>(ValueType{BOOL, (bool)Next()}).MapOk(push).OnError();
         break;
       case ADD:
-        Pop().AggregateOk(ArithmeticAdd, Pop()).MapOk(push).OnError();
+        Pop().AggregateOk(ArithmeticAdd, Pop()).MapOk(push);
         break;
       case SUB:
-        Pop().AggregateOk(ArithmeticSub, Pop()).MapOk(push).OnError();
+        Pop().AggregateOk(ArithmeticSub, Pop()).MapOk(push);
         break;
       case MUL:
-        Pop().AggregateOk(ArithmeticMul, Pop()).MapOk(push).OnError();
+        Pop().AggregateOk(ArithmeticMul, Pop()).MapOk(push);
         break;
       case DIV:
-        Pop().AggregateOk(ArithmeticDiv, Pop()).MapOk(push).OnError();
+        Pop().AggregateOk(ArithmeticDiv, Pop()).MapOk(push);
         break;
       case AND:
+        Pop().AggregateOk(BooleanAnd, Pop()).MapOk(push);
       case OR:
+        Pop().AggregateOk(BooleanOr, Pop()).MapOk(push);
       case XOR:
+        Pop().AggregateOk(BooleanXor, Pop()).MapOk(push);
       case NOT:
+        Pop()
+            .MapOk(static_cast<std::function<Result<ValueType>(ValueType)>>(
+                BooleanNot))
+            .MapOk(push);
       case LT:
+        Pop().AggregateOk(LessThan, Pop()).MapOk(push);
       case LE:
+        Pop().AggregateOk(LessThanEquals, Pop()).MapOk(push);
       case EQ:
+        Pop().AggregateOk(Equals, Pop()).MapOk(push);
       case GE:
+        Pop().AggregateOk(GreaterThanEquals, Pop()).MapOk(push);
       case GT:
+        Pop().AggregateOk(GreaterThan, Pop()).MapOk(push);
       case CREATE_ARRAY: {
         EXCEPTION_HANDLE(size, Pop(), "");
         TYPE_CHECK(size, UINTEGER, "");
@@ -174,16 +186,20 @@ void Interpreter::Execute() {
         TYPE_CHECK(function_ref, ConstantPoolEntryTypeTag::MANAGED_FUNCTION_REF,
                    "");
 
-        auto [so_name, handle_id] =
+        auto [so_name_id, handle_id] =
             std::get<std::pair<uint32_t, uint32_t>>(function_ref.data);
 
-        EXCEPTION_HANDLE(so_name, constant_pool->getEntry(module_id), "");
+        EXCEPTION_HANDLE(so_name, constant_pool->getEntry(so_name_id), "");
         TYPE_CHECK(so_name, ConstantPoolEntryTypeTag::STRING, "");
 
         EXCEPTION_HANDLE(handle, constant_pool->getEntry(handle_id), "");
         TYPE_CHECK(handle, ConstantPoolEntryTypeTag::STRING, "");
 
-        EXCEPTION_HANDLE(fun, m_native_table.Call(so_name, handle, env), "");
+        EXCEPTION_HANDLE(
+            fun,
+            m_native_table.Call(std::get<string>(so_name.data),
+                                std::get<string>(handle.data), env),
+            "");
       }; break;
       case HALT:
       default:
