@@ -7,7 +7,6 @@ DLVM is a stack based virtual machine that uses a bytecode format that is inspir
 
 # TODO
 
-* Implement table-based mark-compact garbage collector (remove the page table), this will make the GC go from O(n^2) to O(n*log(n))
 * Interpreter loop
 * Write down a detailed (enough) specification
 * Profile functions on run-time
